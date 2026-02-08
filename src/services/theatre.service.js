@@ -1,4 +1,5 @@
 const Theatre = require('../models/theatre.model');
+const Movie = require('../models/movie.model');
 
 /**
  * 
@@ -81,6 +82,13 @@ const getAllTheatres = async (data) => {
         if(data && data.pincode) {
             // this checks whether pincode is present in query params or not
             query.pincode = data.pincode;
+        }
+        if(data && data.name) {
+            // this checks whether name is present in query params or not
+            query.name = data.name;
+        }
+         if(data && data.movieId) {
+            query.movies = {$all: data.movieId};
         }
         if(data && data.limit) {
             pagination.limit = data.limit;
