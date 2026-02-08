@@ -1,6 +1,6 @@
 const Movie = require('../models/movie.model');
 const movieService = require('../services/movie.service');
-const { successResponseBody, errorResponseBody} = require('../utills/responsebody');
+const { successResponseBody, errorResponseBody} = require('../utils/responsebody');
 
 /**
  * Controller function to create a new movie
