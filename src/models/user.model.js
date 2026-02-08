@@ -1,12 +1,11 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const { USER_ROLE, USER_STATUS} = require('../utils/constants');
+const { USER_ROLE, USER_STATUS } = require('../utils/constants');
 
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true,
-        unique: true
+        required: true
     },
     email: {
         type: String,
@@ -23,42 +22,25 @@ const userSchema = new mongoose.Schema({
     },
     userRole: {
         type: String,
-        required: true,
-        enum: {
-            values: [USER_ROLE.customer, USER_ROLE.admin, USER_ROLE.client],
-            message: "Invalid user role given"
-        },
+        enum: [USER_ROLE.customer, USER_ROLE.admin, USER_ROLE.client],
         default: USER_ROLE.customer
     },
     userStatus: {
         type: String,
-        required: true,
-        enum: {
-            values: [USER_STATUS.approved, USER_STATUS.pending, USER_STATUS.rejected],
-            message: "Invalid status for user given"
-        },
+        enum: [USER_STATUS.approved, USER_STATUS.pending, USER_STATUS.rejected],
         default: USER_STATUS.approved
     }
-}, {timestamps: true});
+}, { timestamps: true });
 
-userSchema.pre('save', async function (next) {
-    // a trigger to encrypt the plain password before saving the user
-    const hash = await bcrypt.hash(this.password, 10);
-    this.password = hash;
-    next();
+// Hash password
+userSchema.pre('save', async function () {
+    if (!this.isModified('password')) return;
+    this.password = await bcrypt.hash(this.password, 10);
 });
 
-/**
- * This is going to be an instance method for user, to compare a password
- * with the stored encrypted password
- * @param plainPassword -> input password given by user in sign in request
- * @returns boolean denoting whether passwords are same or not ?
- */
-userSchema.methods.isValidPassword = async (plainPassword) => {
-    const currentUser = this;
-    const compare = await bcrypt.compare(plainPassword, currentUser.password);
-    return compare;
-}
+// Compare password
+userSchema.methods.isValidPassword = async function (plainPassword) {
+    return await bcrypt.compare(plainPassword, this.password);
+};
 
-const User = mongoose.model('User', userSchema);
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);

@@ -26,10 +26,29 @@ const createUser = async (data) => {
             });
             throw {err: err, code: 422};
         }
+        if (error.code === 11000) {
+            throw {err: "Email already exists", code: 409};
+        }
+        throw error;
+    }
+}
+
+const getUserByEmail = async (email) => {
+    try {
+        const response = await User.findOne({
+            email: email
+        });
+        if(!response) {
+            throw {err: "No user found for the given email", code: 404};
+        }
+        return response;
+    } catch (error) {
+        console.log(error);
         throw error;
     }
 }
 
 module.exports = {
-    createUser
+    createUser,
+    getUserByEmail
 }
