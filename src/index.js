@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 
 const MovieRoutes = require('./routes/movie.routes');
 const theatreRoutes = require('./routes/theatre.routes');
+const authRoutes = require('./routes/auth.routes');
 
 // load environment variables
 dotenv.config();
@@ -19,6 +20,7 @@ mongoose.set('debug', true);
 
 MovieRoutes(app); // invoking movie routes
 theatreRoutes(app); // involing theatre routes
+authRoutes(app); // invoking auth routes
 
 
 // start server + connect DB
