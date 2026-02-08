@@ -18,31 +18,13 @@ app.use(bodyParser.json());
 MovieRoutes(app); // invoking movie routes
 theatreRoutes(app); // involing theatre routes
 
-// basic test route
-app.get("/home", (req, res) => {
-  console.log("Hitting /home");
-  return res.status(200).json({
-    success: true,
-    message: "Fetched home"
-  });
-});
-
-// env variables
-const PORT = process.env.PORT || 3000;
-const DB_URL = process.env.DB_URL;
-
-// validation
-if (!DB_URL) {
-  console.error("DB_URL not defined in .env file");
-  process.exit(1);
-}
 
 // start server + connect DB
-app.listen(PORT, async () => {
-  console.log(`Server started on Port ${PORT} !!`);
+app.listen(process.env.PORT, async () => {
+  console.log(`Server started on Port ${process.env.PORT} !!`);
 
   try {
-    await mongoose.connect(DB_URL);
+    await mongoose.connect(process.env.DB_URL);
     console.log("Successfully connected to MongoDB");
   } catch (err) {
     console.error("Not able to connect MongoDB", err);

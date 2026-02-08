@@ -1,5 +1,10 @@
 const Theatre = require('../models/theatre.model');
 
+/**
+ * 
+ * @param data -> object containing details of the new theatre to be created
+ * @returns -> returns the new theatre object created
+ */
 const createTheatre = async (data) => {
     try {
         const response = await Theatre.create(data);
@@ -17,6 +22,11 @@ const createTheatre = async (data) => {
     }
 }
 
+/**
+ * 
+ * @param id -> id of the theatre to be deleted
+ * @returns -> whether the theatre is deleted or not
+ */
 const deleteTheatre = async (id) => {
     try {
         const response = await Theatre.findByIdAndDelete(id);
@@ -36,6 +46,7 @@ const deleteTheatre = async (id) => {
 /**
  * 
  * @param id -> it is the unique _id based on which we will fetch a theatre
+ * @returns -> the theatre object for the corresponding id
  */
 const getTheatre = async (id) => {
     try {
@@ -54,6 +65,11 @@ const getTheatre = async (id) => {
     }
 }
 
+/**
+ * 
+ * @param data -> it is the filter object based on which we will fetch the theatres
+ * @returns -> list of theatres for the corresponding filter
+ */
 const getAllTheatres = async (data) => {
     try {
         let query = {};
@@ -81,6 +97,14 @@ const getAllTheatres = async (data) => {
         throw error;
     } 
 }
+
+/** * 
+ * @param id -> id of the theatre to be updated
+ * @param data -> object containing details of the theatre to be updated
+ * @returns -> the updated theatre object
+ * // we can use the same function for both put and patch request as in both cases we are updating the theatre details
+ */
+
 const updateTheatre = async (id, data) => {
     try {
         const response = await Theatre.findByIdAndUpdate(id, data, {
