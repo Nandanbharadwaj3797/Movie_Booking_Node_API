@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 
 const MovieRoutes = require('./routes/movie.routes');
+const theatreRoutes = require('./routes/theatre.routes');
 
 // load environment variables
 dotenv.config();
@@ -15,6 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 MovieRoutes(app); // invoking movie routes
+theatreRoutes(app); // involing theatre routes
 
 // basic test route
 app.get("/home", (req, res) => {
