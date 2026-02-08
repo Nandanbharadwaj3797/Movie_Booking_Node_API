@@ -3,6 +3,8 @@ const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 
+const MovieRoutes = require('./routes/movie.routes');
+
 // load environment variables
 dotenv.config();
 
@@ -11,6 +13,8 @@ const app = express();
 // middlewares
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+MovieRoutes(app); // invoking movie routes
 
 // basic test route
 app.get("/home", (req, res) => {
