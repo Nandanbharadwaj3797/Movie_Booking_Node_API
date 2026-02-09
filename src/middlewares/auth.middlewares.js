@@ -8,26 +8,39 @@ const userService = require('../services/user.service');
  * @param res -> http response object
  * @param next -> next middleware
  */
-const validateSignupRequest = async (req, res, next) => {
-    // validate name of the user
-    if(!req.body.name) {
-        errorResponseBody.err = "Name of the user not present in the request";
-        return res.status(400).json(errorResponseBody);
-    }
-    // validate email of the user
-    if(!req.body.email) {
-        errorResponseBody.err = "Email of the user not present in the request";
-        return res.status(400).json(errorResponseBody);
-    }
-    // validate password present of the user
-    if(!req.body.password) {
-        errorResponseBody.err = "Password of the user not present in the request";
-        return res.status(400).json(errorResponseBody);
+const validateSignupRequest = (req, res, next) => {
+
+    if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({
+            ...errorResponseBody,
+            err: "Request body is missing"
+        });
     }
 
-    // request is valid
+    if (!req.body.name) {
+        return res.status(400).json({
+            ...errorResponseBody,
+            err: "Name of the user not present in the request"
+        });
+    }
+
+    if (!req.body.email) {
+        return res.status(400).json({
+            ...errorResponseBody,
+            err: "Email of the user not present in the request"
+        });
+    }
+
+    if (!req.body.password) {
+        return res.status(400).json({
+            ...errorResponseBody,
+            err: "Password of the user not present in the request"
+        });
+    }
+
     next();
-}
+};
+
 
 /**
  * validator for user signin
@@ -35,69 +48,112 @@ const validateSignupRequest = async (req, res, next) => {
  * @param res -> http response object
  * @param next -> next middleware
  */
-const validateSigninRequest = async (req, res, next) => {
-    // validate user email presence
-    if(!req.body.email) {
-        errorResponseBody.err = "No email provided for sign in";
-        return res.status(400).json(errorResponseBody);
+const validateSigninRequest = (req, res, next) => {
+
+    if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({
+            ...errorResponseBody,
+            err: "Request body is missing"
+        });
     }
 
-    // validate user password presence
-    if(!req.body.password) {
-        errorResponseBody.err = "No password provided for sign in";
-        return res.status(400).json(errorResponseBody);
+    if (!req.body.email) {
+        return res.status(400).json({
+            ...errorResponseBody,
+            err: "No email provided for sign in"
+        });
     }
 
-    // request is valid
+    if (!req.body.password) {
+        return res.status(400).json({
+            ...errorResponseBody,
+            err: "No password provided for sign in"
+        });
+    }
+
     next();
-}
+};
+
+/**
+ * middleware to check if the user is authenticated or not
+ * it will verify the token and attach the user id in the request object
+ * @param req -> http request object
+ * @param res -> http response object
+ *  @param next -> next middleware
+ */
 
 const isAuthenticated = async (req, res, next) => {
     try {
-        const token = req.headers["x-access-token"];
-        if(!token) {
-            errorResponseBody.err = "No token provided";
-            return res.status(403).json(errorResponseBody);
+        const token =
+            req.headers["x-access-token"] ||
+            req.headers["authorization"]?.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({
+                ...errorResponseBody,
+                err: "Authentication token missing"
+            });
         }
-        const response = jwt.verify(token, process.env.AUTH_KEY);
-        if(!response) {
-            errorResponseBody.err = "Token not verified";
-            return res.status(401).json(errorResponseBody);
-        }
-        const user = await userService.getUserById(response.id);
-        req.user = user.id;
+
+        const decoded = jwt.verify(token, process.env.AUTH_KEY);
+
+        const user = await userService.getUserById(decoded.id);
+
+        // attach full user (best practice)
+        req.user = user;
+
         next();
+
     } catch (error) {
-        if(error.name == "JsonWebTokenError") {
-            errorResponseBody.err = error.message;
-            return res.status(401).json(errorResponseBody);
+
+        if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+            return res.status(401).json({
+                ...errorResponseBody,
+                err: error.message
+            });
         }
-        if(error.code == 404) {
-            errorResponseBody.err = "User doesn't exist"
-            return res.status(error.code).json(errorResponseBody);
+
+        if (error.code === 404) {
+            return res.status(404).json({
+                ...errorResponseBody,
+                err: "User doesn't exist"
+            });
         }
-        errorResponseBody.err = error;
-        return res.status(500).json(errorResponseBody);
+
+        return res.status(500).json({
+            ...errorResponseBody,
+            err: "Internal Server Error"
+        });
     }
-}
+};
+
 
 
 const validateResetPasswordRequest = (req, res, next) => {
-    // validate old password presence
-    if(!req.body.oldPassword) {
-        errorResponseBody.err = 'Missing the old password in the request';
-        return res.status(400).json(errorResponseBody);
+
+    if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({
+            ...errorResponseBody,
+            err: "Request body is missing"
+        });
     }
 
-    // validate new password presence
-    if(!req.body.newPassword) {
-        errorResponseBody.err = 'Missing the new password in the request';
-        return res.status(400).json(errorResponseBody);
+    if (!req.body.oldPassword) {
+        return res.status(400).json({
+            ...errorResponseBody,
+            err: 'Missing the old password in the request'
+        });
     }
 
-    // we can proceed
+    if (!req.body.newPassword) {
+        return res.status(400).json({
+            ...errorResponseBody,
+            err: 'Missing the new password in the request'
+        });
+    }
+
     next();
-}
+};
 
 
 
