@@ -18,6 +18,7 @@ const routes = (app) => {
     app.patch(
         '/mba/api/v1/auth/reset',
         authMiddleware.isAuthenticated,
+        authMiddleware.validateResetPasswordRequest,
         authController.resetPassword
     );
     
