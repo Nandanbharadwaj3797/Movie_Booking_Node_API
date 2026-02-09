@@ -15,6 +15,12 @@ const routes = (app) => {
         authController.signin
     );
 
+    app.patch(
+        '/mba/api/v1/auth/reset',
+        authMiddleware.isAuthenticated,
+        authController.resetPassword
+    );
+    
 }
 
 module.exports = routes;
