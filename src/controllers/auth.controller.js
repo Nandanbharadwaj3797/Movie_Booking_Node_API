@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+
 const userService = require('../services/user.service');
 const { successResponseBody, errorResponseBody } = require('../utils/responsebody');
 
@@ -72,7 +73,6 @@ const resetPassword = async (req, res) => {
         return res.status(500).json(errorResponseBody);
     }
 }
-
 module.exports = {
     signup,
     signin,

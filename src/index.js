@@ -16,6 +16,15 @@ const app = express();
 // middlewares
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(express.json());
+
+// Global request logger middleware
+app.use((req, res, next) => {
+  console.log('Incoming request:', req.method, req.url);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  next();
+});
 
 mongoose.set('debug', true);
 

@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { errorResponseBody } = require('../utils/responsebody');
 const userService = require('../services/user.service');
+const { USER_ROLE } = require('../utils/constants');
+
 
 /**
  * validator for user signup
@@ -99,13 +101,18 @@ const isAuthenticated = async (req, res, next) => {
 
         const user = await userService.getUserById(decoded.id);
 
-        // attach full user (best practice)
+        if (!user) {
+            return res.status(404).json({
+                ...errorResponseBody,
+                err: "User not found"
+            });
+        }
+
         req.user = user;
 
         next();
 
     } catch (error) {
-
         if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
             return res.status(401).json({
                 ...errorResponseBody,
@@ -113,16 +120,9 @@ const isAuthenticated = async (req, res, next) => {
             });
         }
 
-        if (error.code === 404) {
-            return res.status(404).json({
-                ...errorResponseBody,
-                err: "User doesn't exist"
-            });
-        }
-
         return res.status(500).json({
             ...errorResponseBody,
-            err: "Internal Server Error"
+            err: error.message
         });
     }
 };
@@ -155,11 +155,50 @@ const validateResetPasswordRequest = (req, res, next) => {
     next();
 };
 
+const forbid = (res, message) => {
+    return res.status(403).json({
+        ...errorResponseBody,
+        err: message
+    });
+};
+
+const isAdmin = (req, res, next) => {
+    console.log(req.user);
+    if (!req.user || req.user.userRole !== USER_ROLE.admin) {
+        return forbid(res, "User is not an admin, cannot proceed with the request");
+    }
+    next();
+};
+
+const isClient = (req, res, next) => {
+    if (!req.user || req.user.userRole !== USER_ROLE.client) {
+        return forbid(res, "User is not a client, cannot proceed with the request");
+    }
+    next();
+};
+
+const isAdminOrClient = (req, res, next) => {
+    if (
+        !req.user ||
+        (req.user.userRole !== USER_ROLE.admin &&
+         req.user.userRole !== USER_ROLE.client)
+    ) {
+        return forbid(
+            res,
+            "User is neither a client nor an admin, cannot proceed with the request"
+        );
+    }
+    next();
+};
+
 
 
 module.exports = {
     validateSignupRequest,
     validateSigninRequest,
     isAuthenticated,
-    validateResetPasswordRequest
+    validateResetPasswordRequest,
+    isAdmin,
+    isClient,
+    isAdminOrClient
 }
