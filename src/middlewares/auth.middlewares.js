@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { errorResponseBody } = require('../utils/responsebody');
 const userService = require('../services/user.service');
-const { USER_ROLE } = require('../utils/constants');
+const { USER_ROLE,STATUS } = require('../utils/constants');
 
 
 /**
@@ -13,28 +13,28 @@ const { USER_ROLE } = require('../utils/constants');
 const validateSignupRequest = (req, res, next) => {
 
     if (!req.body || typeof req.body !== 'object') {
-        return res.status(400).json({
+        return res.status(STATUS.BAD_REQUEST).json({
             ...errorResponseBody,
             err: "Request body is missing"
         });
     }
 
     if (!req.body.name) {
-        return res.status(400).json({
+        return res.status(STATUS.BAD_REQUEST).json({
             ...errorResponseBody,
             err: "Name of the user not present in the request"
         });
     }
 
     if (!req.body.email) {
-        return res.status(400).json({
+        return res.status(STATUS.BAD_REQUEST).json({
             ...errorResponseBody,
             err: "Email of the user not present in the request"
         });
     }
 
     if (!req.body.password) {
-        return res.status(400).json({
+        return res.status(STATUS.BAD_REQUEST).json({
             ...errorResponseBody,
             err: "Password of the user not present in the request"
         });
@@ -53,21 +53,21 @@ const validateSignupRequest = (req, res, next) => {
 const validateSigninRequest = (req, res, next) => {
 
     if (!req.body || typeof req.body !== 'object') {
-        return res.status(400).json({
+        return res.status(STATUS.BAD_REQUEST).json({
             ...errorResponseBody,
             err: "Request body is missing"
         });
     }
 
     if (!req.body.email) {
-        return res.status(400).json({
+        return res.status(STATUS.BAD_REQUEST).json({
             ...errorResponseBody,
             err: "No email provided for sign in"
         });
     }
 
     if (!req.body.password) {
-        return res.status(400).json({
+        return res.status(STATUS.BAD_REQUEST).json({
             ...errorResponseBody,
             err: "No password provided for sign in"
         });
@@ -91,7 +91,7 @@ const isAuthenticated = async (req, res, next) => {
             req.headers["authorization"]?.split(" ")[1];
 
         if (!token) {
-            return res.status(401).json({
+            return res.status(STATUS.UNAUTHORIZED).json({
                 ...errorResponseBody,
                 err: "Authentication token missing"
             });
@@ -102,7 +102,7 @@ const isAuthenticated = async (req, res, next) => {
         const user = await userService.getUserById(decoded.id);
 
         if (!user) {
-            return res.status(404).json({
+            return res.status(STATUS.NOT_FOUND).json({
                 ...errorResponseBody,
                 err: "User not found"
             });
@@ -114,13 +114,13 @@ const isAuthenticated = async (req, res, next) => {
 
     } catch (error) {
         if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
-            return res.status(401).json({
+            return res.status(STATUS.UNAUTHORIZED).json({
                 ...errorResponseBody,
                 err: error.message
             });
         }
 
-        return res.status(500).json({
+        return res.status(STATUS.INTERNAL_SERVER_ERROR).json({
             ...errorResponseBody,
             err: error.message
         });
@@ -132,21 +132,21 @@ const isAuthenticated = async (req, res, next) => {
 const validateResetPasswordRequest = (req, res, next) => {
 
     if (!req.body || typeof req.body !== 'object') {
-        return res.status(400).json({
+        return res.status(STATUS.BAD_REQUEST).json({
             ...errorResponseBody,
             err: "Request body is missing"
         });
     }
 
     if (!req.body.oldPassword) {
-        return res.status(400).json({
+        return res.status(STATUS.BAD_REQUEST).json({
             ...errorResponseBody,
             err: 'Missing the old password in the request'
         });
     }
 
     if (!req.body.newPassword) {
-        return res.status(400).json({
+        return res.status(STATUS.BAD_REQUEST).json({
             ...errorResponseBody,
             err: 'Missing the new password in the request'
         });
@@ -156,7 +156,7 @@ const validateResetPasswordRequest = (req, res, next) => {
 };
 
 const forbid = (res, message) => {
-    return res.status(403).json({
+    return res.status(STATUS.FORBIDDEN).json({
         ...errorResponseBody,
         err: message
     });

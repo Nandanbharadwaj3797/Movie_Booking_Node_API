@@ -25,5 +25,6 @@ const STATUS_CODES = {
 
 module.exports = {
     USER_ROLE,
-    USER_STATUS
+    USER_STATUS,
+    STATUS: STATUS_CODES
 }
