@@ -8,17 +8,14 @@ const theatreRoutes = require('./routes/theatre.routes');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 
-// load environment variables
 dotenv.config();
 
 const app = express();
 
-// middlewares
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json());
 
-// Global request logger middleware
 app.use((req, res, next) => {
   console.log('Incoming request:', req.method, req.url);
   console.log('Headers:', req.headers);
@@ -28,13 +25,12 @@ app.use((req, res, next) => {
 
 mongoose.set('debug', true);
 
-MovieRoutes(app); // invoking movie routes
-theatreRoutes(app); // involing theatre routes
-authRoutes(app); // invoking auth routes
-userRoutes(app); // invoking user routes
+MovieRoutes(app);
+theatreRoutes(app);
+authRoutes(app);
+userRoutes(app);
 
 
-// start server + connect DB
 app.listen(process.env.PORT, async () => {
   console.log(`Server started on Port ${process.env.PORT} !!`);
 

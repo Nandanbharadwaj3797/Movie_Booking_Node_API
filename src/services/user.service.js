@@ -1,6 +1,7 @@
-const { USER_ROLE, USER_STATUS } = require('../utils/constants');
+const { USER_ROLE, USER_STATUS,STATUS } = require('../utils/constants');
 const User = require('../models/user.model');
 const mongoose = require('mongoose');
+
 
 const createUser = async (payload) => {
     try {
@@ -15,7 +16,7 @@ const createUser = async (payload) => {
             ) {
                 throw {
                     err: "Customer status must be APPROVED",
-                    code: 400
+                    code: STATUS.BAD_REQUEST
                 };
             }
             data.userStatus = USER_STATUS.approved;
@@ -37,13 +38,13 @@ const createUser = async (payload) => {
             Object.keys(error.errors).forEach(key => {
                 err[key] = error.errors[key].message;
             });
-            throw { err, code: 400 };
+            throw { err, code: STATUS.BAD_REQUEST };
         }
 
-        if (error.code === 11000) {
+        if (error.code === STATUS.DUPLICATE_KEY_ERROR) {
             throw {
                 err: "Email already exists",
-                code: 409
+                code: STATUS.CONFLICT
             };
         }
 
@@ -56,7 +57,7 @@ const getUserByEmail = async (email) => {
         if (!email) {
             throw {
                 err: "Email is required",
-                code: 400
+                code: STATUS.BAD_REQUEST
             };
         }
 
@@ -65,7 +66,7 @@ const getUserByEmail = async (email) => {
         if (!user) {
             throw {
                 err: "No user found for the given email",
-                code: 404
+                code: STATUS.NOT_FOUND
             };
         }
 
@@ -81,7 +82,7 @@ const getUserById = async (id) => {
         if (!id) {
             throw {
                 err: "User id is required",
-                code: 400
+                code: STATUS.BAD_REQUEST
             };
         }
 
@@ -89,7 +90,7 @@ const getUserById = async (id) => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             throw {
                 err: "Invalid user id",
-                code: 400
+                code: STATUS.BAD_REQUEST
             };
         }
 
@@ -98,7 +99,7 @@ const getUserById = async (id) => {
         if (!user) {
             throw {
                 err: "No user found for the given id",
-                code: 404
+                code: STATUS.NOT_FOUND
             };
         }
 
@@ -114,7 +115,7 @@ const updateUserRoleOrStatus = async (payload, userId) => {
         if (!userId) {
             throw {
                 err: 'User id is required',
-                code: 400
+                code: STATUS.BAD_REQUEST
             };
         }
 
@@ -122,7 +123,7 @@ const updateUserRoleOrStatus = async (payload, userId) => {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw {
                 err: 'Invalid user id',
-                code: 400
+                code: STATUS.BAD_REQUEST
             };
         }
 
@@ -140,7 +141,7 @@ const updateUserRoleOrStatus = async (payload, userId) => {
         if (Object.keys(updateQuery).length === 0) {
             throw {
                 err: 'Nothing to update',
-                code: 400
+                code: STATUS.BAD_REQUEST
             };
         }
 
@@ -153,7 +154,7 @@ const updateUserRoleOrStatus = async (payload, userId) => {
         if (!response) {
             throw {
                 err: 'No user found for the given id',
-                code: 404
+                code: STATUS.NOT_FOUND
             };
         }
 
@@ -168,7 +169,7 @@ const updateUserRoleOrStatus = async (payload, userId) => {
             });
             throw {
                 err,
-                code: 400
+                code: STATUS.BAD_REQUEST
             };
         }
 
