@@ -7,16 +7,17 @@ const routes = (app) => {
     // routes function takes express app object as parameter
 
     // create a theatre
-    app.post(
-        '/mba/api/v1/theatres',
+    app.post('/mba/api/v1/theatres',
+        authMiddleware.isAuthenticated,
+        authMiddleware.isAdminOrClient,
         theatreMiddleware.validateTheatreCreateRequest,
         theatreController.create
     );
 
     // delete a theatre
-    app.delete(
-        '/mba/api/v1/theatres/:id',
+    app.delete('/mba/api/v1/theatres/:id',
         authMiddleware.isAuthenticated,
+        authMiddleware.isAdminOrClient,
         theatreController.destroy
     );
 
@@ -33,20 +34,23 @@ const routes = (app) => {
     );
 
     // update a theatre partially
-    app.patch(
-        '/mba/api/v1/theatres/:id',
+    app.patch('/mba/api/v1/theatres/:id',
+        authMiddleware.isAuthenticated,
+        authMiddleware.isAdminOrClient,
         theatreController.update
     );
 
     // update a theatre completely
-    app.put(
-        '/mba/api/v1/theatres/:id',
+    app.put('/mba/api/v1/theatres/:id',
+        authMiddleware.isAuthenticated,
+        authMiddleware.isAdminOrClient,
         theatreController.update
     );
 
     // update movies in a theatre
-    app.patch(
-        '/mba/api/v1/theatres/:id/movies',
+    app.patch('/mba/api/v1/theatres/:id/movies',
+        authMiddleware.isAuthenticated,
+        authMiddleware.isAdminOrClient,
         theatreMiddleware.validateUpdateMoviesRequest,
         theatreController.updateMovies
     );
