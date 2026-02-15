@@ -1,5 +1,4 @@
 const Theatre = require('../models/theatre.model');
-const Movie = require('../models/movie.model');
 const {STATUS} = require('../utils/constants');
 
 /**
@@ -23,16 +22,18 @@ const createTheatre = async (data) => {
             });
 
             throw {
-                err: validationErrors,
-                code: STATUS.UNPROCESSABLE_ENTITY
+                code: STATUS.UNPROCESSABLE_ENTITY,
+                message: validationErrors
             };
+
         }
 
         // For all other errors
         throw {
-            err: error.message,
-            code: STATUS.INTERNAL_SERVER_ERROR
+            code: STATUS.INTERNAL_SERVER_ERROR,
+            message: error.message
         };
+
     }
 };
 
@@ -53,7 +54,6 @@ const deleteTheatre = async (id) => {
         }
         return response;
     } catch (error) {
-        console.log(error);
         throw error;
     }
 }
@@ -75,7 +75,6 @@ const getTheatre = async (id) => {
         }
         return response;
     } catch (error) {
-        console.log(error);
         throw error;
     }
 }
@@ -87,7 +86,19 @@ const getTheatre = async (id) => {
  */
 const getAllTheatres = async (queryParams) => {
     try {
-        const { page = 1, limit = 10, city, name, movieId } = queryParams;
+        const {
+            page = 1,
+            limit = 10,
+            city,
+            name,
+            movieId,
+            sortBy = 'createdAt',
+            sortOrder = 'desc'
+        } = queryParams;
+
+        const pageNumber = Math.max(1, parseInt(page) || 1);
+        const limitNumber = Math.max(1, parseInt(limit) || 10);
+
 
         let query = {};
 
@@ -95,22 +106,27 @@ const getAllTheatres = async (queryParams) => {
         if (name) query.name = name;
         if (movieId) query.movies = { $all: movieId };
 
-        const skip = (page - 1) * limit;
+        const skip = (pageNumber - 1) * limitNumber;
 
-        const totalItems = await Theatre.countDocuments(query);
-        const theatres = await Theatre.find(query)
-            .skip(skip)
-            .limit(limit);
+        const sortOptions = {
+            [sortBy]: sortOrder === 'asc' ? 1 : -1
+        };
 
-        const totalPages = Math.ceil(totalItems / limit);
-
+        const [totalItems, theatres] = await Promise.all([
+            Theatre.countDocuments(query),
+            Theatre.find(query)
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(limitNumber)
+        ]);
+        const totalPages = Math.ceil(totalItems / limitNumber);
         return {
             theatres,
             pagination: {
                 totalItems,
                 totalPages,
-                currentPage: page,
-                pageSize: limit
+                currentPage: pageNumber,
+                pageSize: limitNumber
             }
         };
 
@@ -118,6 +134,7 @@ const getAllTheatres = async (queryParams) => {
         throw error;
     }
 };
+
 
 
 /** * 
@@ -132,13 +149,11 @@ const updateTheatre = async (id, data) => {
         const response = await Theatre.findByIdAndUpdate(id, data, {
             new: true, runValidators: true
         });
-        if(!response) {
-            // no record found for the given id
+        if (!response) {
             throw {
-                code: STATUS.UNPROCESSABLE_ENTITY,
-                message: err
+                code: STATUS.NOT_FOUND,
+                message: "No theatre found for the given id"
             };
-
         }
         return response;
     } catch (error) {
@@ -147,7 +162,11 @@ const updateTheatre = async (id, data) => {
             Object.keys(error.errors).forEach((key) => {
                 err[key] = error.errors[key].message;
             });
-            return {err: err, code: 422}
+            throw {
+                code: STATUS.UNPROCESSABLE_ENTITY,
+                message: err
+            };
+
         }
         throw error;
     }
@@ -161,6 +180,12 @@ const updateTheatre = async (id, data) => {
  */
 const updateMoviesInTheatres = async (theatreId, movieIds, insert) => {
     try {
+        if (!Array.isArray(movieIds) || movieIds.length === 0) {
+            throw {
+                code: STATUS.BAD_REQUEST,
+                message: "movieIds must be a non-empty array"
+            };
+        }
         let updateOperation;
 
         if (insert) {
@@ -207,7 +232,6 @@ const getMoviesInATheatre = async (id) => {
         }
         return theatre;
     } catch (error) {
-        console.log(error);
         throw error;
     }
 }
@@ -221,9 +245,9 @@ const checkMovieInATheatre = async (theatreId, movieId) => {
                 message: "No theatre found for the given id"
             };
         }
-        return response.movies.indexOf(movieId) != -1;
+        return response.movies.some(movie => movie.toString() === movieId);
+
     } catch (error) {
-        console.log(error);
         throw error;
     }
 }

@@ -91,11 +91,12 @@ const isAuthenticated = async (req, res, next) => {
             req.headers["authorization"]?.split(" ")[1];
 
         if (!token) {
-            return res.status(STATUS.UNAUTHORISED).json({
+            return res.status(STATUS.UNAUTHORIZED).json({
                 ...errorResponseBody,
                 err: "Authentication token missing"
             });
         }
+
 
         const decoded = jwt.verify(token, process.env.AUTH_KEY);
 
