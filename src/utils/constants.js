@@ -29,9 +29,16 @@ const Booking_STATUS = {
     CANCELLED: "CANCELLED"
 }
 
+const PAYMENT_STATUS = {
+    SUCCESSFUL: "SUCCESSFUL",
+    FAILED: "FAILED",
+    PENDING: "PENDING"
+}
+
 module.exports = {
     USER_ROLE,
     USER_STATUS,
     STATUS: STATUS_CODES,
-    Booking_STATUS
+    Booking_STATUS,
+    PAYMENT_STATUS
 };
