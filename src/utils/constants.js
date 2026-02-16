@@ -23,8 +23,15 @@ const STATUS_CODES = {
     DUPLICATE_KEY_ERROR: 11000
 };
 
+const Booking_STATUS = {
+    PROCESSING: "IN_PROCESS",
+    SUCCESSFUL: "SUCCESSFUL",
+    CANCELLED: "CANCELLED"
+}
+
 module.exports = {
     USER_ROLE,
     USER_STATUS,
-    STATUS: STATUS_CODES
+    STATUS: STATUS_CODES,
+    Booking_STATUS
 };
