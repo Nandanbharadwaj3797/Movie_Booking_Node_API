@@ -7,6 +7,7 @@ const MovieRoutes = require('./routes/movie.routes');
 const theatreRoutes = require('./routes/theatre.routes');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
+const errorHandler = require('./middlewares/errorHandler.middlewares');
 
 dotenv.config();
 
@@ -15,6 +16,8 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json());
+
+app.use(errorHandler);
 
 app.use((req, res, next) => {
   console.log('Incoming request:', req.method, req.url);

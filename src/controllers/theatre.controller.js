@@ -1,135 +1,171 @@
 const theatreService = require('../services/theatre.service');
-const { successResponseBody, errorResponseBody} = require('../utils/responsebody');
+const { STATUS } = require('../utils/constants');
+const { successResponse } = require('../utils/response');
 
-const create = async (req, res) => {
+/**
+ * Create Theatre
+ */
+const create = async (req, res, next) => {
     try {
         const response = await theatreService.createTheatre(req.body);
-        if(response.err) {
-            errorResponseBody.err = response.err;
-            errorResponseBody.message = "Validation failed on few parameters of the request body";
-            return res.status(response.code).json(errorResponseBody);
-        }
-        successResponseBody.data = response;
-        successResponseBody.message = "Successfully created the theatre"
-        return res.status(201).json(successResponseBody);
-    } catch (error) {
-        errorResponseBody.err = error;
-        return res.status(500).json(errorResponseBody);
-    }
-}
 
-const destroy = async (req, res) => {
+        return successResponse(
+            res,
+            STATUS.CREATED,
+            response, "Successfully created the theatre"
+        );
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Delete Theatre
+ */
+const destroy = async (req, res, next) => {
     try {
         const response = await theatreService.deleteTheatre(req.params.id);
-        if(response.err) {
-            errorResponseBody.err = response.err;
-            return res.status(response.code).json(errorResponseBody);
-        }
-        successResponseBody.data = response;
-        successResponseBody.message = "Successfully deleted the given theatre";
-        return res.status(200).json(successResponseBody);
-    } catch (error) {
-        errorResponseBody.err = error;
-        return res.status(500).json(errorResponseBody);
-    }
-}
 
-const getTheatre = async (req, res) => {
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "Successfully deleted the given theatre"
+        );
+
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get Single Theatre
+ */
+const getTheatre = async (req, res, next) => {
     try {
         const response = await theatreService.getTheatre(req.params.id);
-        if(response.err) {
-            errorResponseBody.err = response.err;
-            return res.status(response.code).json(errorResponseBody);
-        }
-        successResponseBody.data = response;
-        successResponseBody.message = "Successfully fetched the data of the theatre";
-        return res.status(200).json(successResponseBody);
-    } catch (error) {
-        errorResponseBody.err = error;
-        return res.status(500).json(errorResponseBody);
-    }
-}
 
-const getTheatres = async (req, res) => {
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "Successfully fetched theatre"
+        );
+
+
+    } catch (error) {
+
+        next(error);
+    }
+};
+        
+/**
+ * Get All Theatres
+ */
+const getTheatres = async (req, res, next) => {
     try {
         const response = await theatreService.getAllTheatres(req.query);
-        successResponseBody.data = response;
-        successResponseBody.message = "Successfully fetched all the theatres";
-        return res.status(200).json(successResponseBody);
-    } catch (error) {
-        errorResponseBody.err = error;
-        return res.status(500).json(errorResponseBody);
-    }
-}
 
-const update = async (req, res) => {
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "Successfully fetched all theatres"
+        );
+
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Update Theatre
+ */
+const update = async (req, res, next) => {
     try {
         const response = await theatreService.updateTheatre(req.params.id, req.body);
-        if(response.err) {
-            errorResponseBody.err = response.err;
-            return res.status(response.code).json(errorResponseBody);
-        }
-        successResponseBody.data = response;
-        successResponseBody.message = "Successfully updated the theatre";
-        return res.status(200).json(successResponseBody);
-    } catch (error) {
-        console.log(error);
-        errorResponseBody.err = error;
-        return res.status(500).json(errorResponseBody);
-    }
-}
 
-const updateMovies = async (req, res) => {
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "Successfully updated the theatre"
+        );
+
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Update Movies in Theatre
+ */
+const updateMovies = async (req, res, next) => {
     try {
         const response = await theatreService.updateMoviesInTheatres(
             req.params.id,
             req.body.movieIds,
             req.body.insert
         );
-        if(response.err) {
-            errorResponseBody.err = response.err;
-            return res.status(response.code).json(errorResponseBody);
-        }
-        successResponseBody.data = response;
-        successResponseBody.message = "Successfully updated movies in the theatre";
-        return res.status(200).json(successResponseBody);
+
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "Successfully updated movies in theatre"
+        );
+
     } catch (error) {
-        console.log(error);
-        errorResponseBody.err = error;
-        return res.status(500).json(errorResponseBody);
+        next(error);
     }
-}
-const getMovies = async (req, res) => {
+};
+
+/**
+ * Get Movies in Theatre
+ */
+const getMovies = async (req, res, next) => {
     try {
         const response = await theatreService.getMoviesInATheatre(req.params.id);
-        if(response.err) {
-            errorResponseBody.err = response.err;
-            return res.status(response.code).json(errorResponseBody);
-        }
-        successResponseBody.data = response;
-        successResponseBody.message = "Successfully fetched the movies for the theatre";
-        return res.status(200).json(successResponseBody);
-    } catch (error) {
-        errorResponseBody.err = error;
-        return res.status(500).json(errorResponseBody);
-    }
-}
 
-const checkMovie = async (req, res) => {
-    try {
-        const response = await theatreService.checkMovieInATheatre(req.params.theatreId, req.params.movieId);
-        if(response.err) {
-            errorResponseBody.err = response.err;
-            return res.status(response.status).json(errorResponseBody);
-        }
-        successResponseBody.data = response;
-        successResponseBody.message = "Successfully checked if movie is present in the theatre";
-        return res.status(200).json(successResponseBody);
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "Successfully fetched movies"
+        );
+
+
     } catch (error) {
-        errorResponseBody.err = error;
-        return res.status(500).json(errorResponseBody);
+        next(error);
     }
-}
+};
+
+/**
+ * Check Movie in Theatre
+ */
+const checkMovie = async (req, res, next) => {
+    try {
+        const response = await theatreService.checkMovieInATheatre(
+            req.params.theatreId,
+            req.params.movieId
+        );
+
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "Successfully checked movie presence"
+        );
+
+
+    } catch (error) {
+        next(error);
+    }
+};
 
 module.exports = {
     create,
@@ -140,4 +176,4 @@ module.exports = {
     updateMovies,
     getMovies,
     checkMovie
-}
+};
