@@ -7,23 +7,23 @@ const createUser = async (payload) => {
     try {
         const data = { ...payload };
 
-        const role = data.userRole || USER_ROLE.customer;
+        const role = data.userRole || USER_ROLE.CUSTOMER;
 
-        if (role === USER_ROLE.customer) {
+        if (role === USER_ROLE.CUSTOMER) {
             if (
                 data.userStatus &&
-                data.userStatus !== USER_STATUS.approved
+                data.userStatus !== USER_STATUS.APPROVED
             ) {
                 throw {
                     err: "Customer status must be APPROVED",
                     code: STATUS.BAD_REQUEST
                 };
             }
-            data.userStatus = USER_STATUS.approved;
+            data.userStatus = USER_STATUS.APPROVED;
         }
 
-        if (role !== USER_ROLE.customer) {
-            data.userStatus = USER_STATUS.pending;
+        if (role !== USER_ROLE.CUSTOMER) {
+            data.userStatus = USER_STATUS.PENDING;
         }
 
         data.userRole = role;

@@ -165,14 +165,14 @@ const forbid = (res, message) => {
 
 const isAdmin = (req, res, next) => {
     console.log(req.user);
-    if (!req.user || req.user.userRole !== USER_ROLE.admin) {
+    if (!req.user || req.user.userRole !== USER_ROLE.ADMIN) {
         return forbid(res, "User is not an admin, cannot proceed with the request");
     }
     next();
 };
 
 const isClient = (req, res, next) => {
-    if (!req.user || req.user.userRole !== USER_ROLE.client) {
+    if (!req.user || req.user.userRole !== USER_ROLE.CLIENT) {
         return forbid(res, "User is not a client, cannot proceed with the request");
     }
     next();
@@ -181,8 +181,8 @@ const isClient = (req, res, next) => {
 const isAdminOrClient = (req, res, next) => {
     if (
         !req.user ||
-        (req.user.userRole !== USER_ROLE.admin &&
-         req.user.userRole !== USER_ROLE.client)
+        (req.user.userRole !== USER_ROLE.ADMIN &&
+         req.user.userRole !== USER_ROLE.CLIENT)
     ) {
         return forbid(
             res,

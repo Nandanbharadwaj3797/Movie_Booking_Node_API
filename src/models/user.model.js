@@ -22,13 +22,13 @@ const userSchema = new mongoose.Schema({
     },
     userRole: {
         type: String,
-        enum: [USER_ROLE.customer, USER_ROLE.admin, USER_ROLE.client],
-        default: USER_ROLE.customer
+        enum: [USER_ROLE.CUSTOMER, USER_ROLE.ADMIN, USER_ROLE.CLIENT],
+        default: USER_ROLE.CUSTOMER
     },
     userStatus: {
         type: String,
-        enum: [USER_STATUS.approved, USER_STATUS.pending, USER_STATUS.rejected],
-        default: USER_STATUS.approved
+        enum: [USER_STATUS.APPROVED, USER_STATUS.PENDING, USER_STATUS.REJECTED],
+        default: USER_STATUS.APPROVED
     }
 }, { timestamps: true });
 

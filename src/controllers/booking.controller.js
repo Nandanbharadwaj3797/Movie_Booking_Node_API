@@ -9,7 +9,8 @@ const create=async(req,res,next)=>{
         return successResponse(
             res,
             STATUS.CREATED,
-            response,"Booking created successfully"
+            response,
+            "Booking created successfully"
         );
 
     } catch (error) {
@@ -24,7 +25,8 @@ const update=async(req,res,next)=>{
         return successResponse(
             res,
             STATUS.OK,
-            response,"Booking updated successfully"
+            response,
+            "Booking updated successfully"
         );
 
     } catch (error) {
@@ -32,7 +34,55 @@ const update=async(req,res,next)=>{
     }
 }
 
+const getBookings=async(req,res,next)=>{
+    try {
+        const response=await bookingService.getBookings({userId:req.user._id});
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "Bookings fetched successfully"
+        );
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+const getAllBookings=async(req,res,next)=>{
+    try {
+        const response=await bookingService.getAllBookings();
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "All Bookings fetched successfully"
+        );
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+const getBookingById=async(req,res,next)=>{
+    try {
+        const response=await bookingService.getBookingById(req.params.id,req.user._id);
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "Booking fetched successfully"
+        );
+    } catch (error) {
+        next(error);
+    }
+}
+
+
 module.exports={
     create,
-    update
+    update,
+    getBookings,
+    getAllBookings,
+    getBookingById
 }
