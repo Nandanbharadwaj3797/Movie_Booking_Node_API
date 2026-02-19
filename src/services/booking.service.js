@@ -82,6 +82,12 @@ const updateBooking=async(data,bookingId)=>{
 const getBookings=async(data)=>{
     try {
         const response=await Booking.find(data);
+        if(!response){
+            throw {
+                code: STATUS.NOT_FOUND,
+                message: "No booking record found for the  userId provided"
+            };
+        }
         return response;
     }
     catch (error) {
