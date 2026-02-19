@@ -45,7 +45,7 @@ const destroy = async (req, res, next) => {
  */
 const getTheatre = async (req, res, next) => {
     try {
-        const response = await theatreService.getTheatre(req.params.id);
+        const response = await theatreService.getTheatreByID(req.params.id);
 
         return successResponse(
             res,

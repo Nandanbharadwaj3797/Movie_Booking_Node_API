@@ -1,26 +1,30 @@
-const mongose = require('mongoose');
-const { Booking_STATUS } = require('../utils/constants');
+const mongoose = require('mongoose');
+const { BOOKING_STATUS } = require('../utils/constants');
 
-const bookingSchema = new mongose.Schema({
+const bookingSchema = new mongoose.Schema({
     theatreId: {
-        type: mongose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Theatre',
         required: true
     },
     movieId: {
-        type: mongose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Movie',
         required: true
     },
     userId: {
-        type: mongose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    timing:{
+    timings: {
         type: String,
         required: true
     },
+    // seats: {
+    //     type: [String],
+    //     required: true
+    // },
     noOfSeats: {
         type: Number,
         required: true,
@@ -31,17 +35,22 @@ const bookingSchema = new mongose.Schema({
         required: true,
         min: 0
     },
-    type: {
+    status: {
         type: String,
-        required: true,
-        enum:{
-            values:[Booking_STATUS.PROCESSING, Booking_STATUS.SUCCESSFUL, Booking_STATUS.CANCELLED],
+        enum: {
+            values: [
+                BOOKING_STATUS.PROCESSING,
+                BOOKING_STATUS.SUCCESSFUL,
+                BOOKING_STATUS.CANCELLED
+            ],
             message: "{VALUE} is not a valid booking status"
         },
-        default: Booking_STATUS.PROCESSING
+        default: BOOKING_STATUS.PROCESSING
     }
-}, {timestamps: true});
+}, { timestamps: true });
 
-const Booking = mongose.model('Booking', bookingSchema);
+bookingSchema.index({ theatreId: 1, movieId: 1 });
+
+const Booking = mongoose.model('Booking', bookingSchema);
 
 module.exports = Booking;

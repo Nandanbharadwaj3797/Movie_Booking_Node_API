@@ -1,14 +1,14 @@
 const USER_STATUS = {
-    approved: "APPROVED",
-    pending: "PENDING",
-    rejected: "REJECTED"
+    APPROVED: "APPROVED",
+    PENDING: "PENDING",
+    REJECTED: "REJECTED"
 };
 
 const USER_ROLE = {
-    customer: "CUSTOMER",
-    admin: "ADMIN",
-    client: "CLIENT"
-}
+    CUSTOMER: "CUSTOMER",
+    ADMIN: "ADMIN",
+    CLIENT: "CLIENT"
+};
 
 const STATUS_CODES = {
     OK: 200,
@@ -19,26 +19,30 @@ const STATUS_CODES = {
     NOT_FOUND: 404,
     CONFLICT: 409,
     UNPROCESSABLE_ENTITY: 422,
-    INTERNAL_SERVER_ERROR: 500,
-    DUPLICATE_KEY_ERROR: 11000
+    INTERNAL_SERVER_ERROR: 500
 };
 
-const Booking_STATUS = {
-    PROCESSING: "IN_PROCESS",
+const BOOKING_STATUS = {
+    PROCESSING: "PROCESSING",
     SUCCESSFUL: "SUCCESSFUL",
     CANCELLED: "CANCELLED"
-}
+};
 
 const PAYMENT_STATUS = {
     SUCCESSFUL: "SUCCESSFUL",
     FAILED: "FAILED",
     PENDING: "PENDING"
-}
+};
+
+const MONGO_ERRORS = {
+    DUPLICATE_KEY: 11000
+};
 
 module.exports = {
     USER_ROLE,
     USER_STATUS,
     STATUS: STATUS_CODES,
-    Booking_STATUS,
-    PAYMENT_STATUS
+    BOOKING_STATUS,
+    PAYMENT_STATUS,
+    MONGO_ERRORS
 };

@@ -63,7 +63,7 @@ const deleteTheatre = async (id) => {
  * @param id -> it is the unique _id based on which we will fetch a theatre
  * @returns -> the theatre object for the corresponding id
  */
-const getTheatre = async (id) => {
+const getTheatreByID = async (id) => {
     try {
         const response = await Theatre.findById(id);
         if(!response) {
@@ -255,7 +255,7 @@ const checkMovieInATheatre = async (theatreId, movieId) => {
 module.exports = {
     createTheatre,
     deleteTheatre,
-    getTheatre,
+    getTheatreByID,
     getAllTheatres,
     updateTheatre,
     updateMoviesInTheatres,

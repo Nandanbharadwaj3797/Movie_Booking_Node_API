@@ -12,16 +12,35 @@ const paymentSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
+    // currency: {
+    //     type: String,
+    //     default: "INR"
+    // },
     status: {
         type: String,
         required: true,
         enum: {
-            values: [PAYMENT_STATUS.SUCCESSFUL, PAYMENT_STATUS.FAILED,PAYMENT_STATUS.PENDING],
+            values: [
+                PAYMENT_STATUS.SUCCESSFUL,
+                PAYMENT_STATUS.FAILED,
+                PAYMENT_STATUS.PENDING
+            ],
             message: "{VALUE} is not a valid payment status"
         },
         default: PAYMENT_STATUS.PENDING
     },
-}, {timestamps: true});
+    // paymentMethod: {
+    //     type: String,
+    //     required: true
+    // },
+    // transactionId: {
+    //     type: String,
+    //     unique: true,
+    //     sparse: true
+    // }
+}, { timestamps: true });
+
+paymentSchema.index({ bookingId: 1 });
 
 const Payment = mongoose.model('Payment', paymentSchema);
 
