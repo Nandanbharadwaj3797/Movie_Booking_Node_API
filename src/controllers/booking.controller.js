@@ -18,6 +18,21 @@ const create=async(req,res,next)=>{
 
 }
 
+const update=async(req,res,next)=>{
+    try {
+        const response=await bookingService.updateBooking(req.body,req.params.id);
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,"Booking updated successfully"
+        );
+
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports={
-    create
+    create,
+    update
 }
