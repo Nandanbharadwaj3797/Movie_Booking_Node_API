@@ -86,7 +86,21 @@ const validateGetShowsRequest=async (req,res,next)=>{
     }
     next();
 }
+
+const validateUpdateShowRequest=async (req,res,next)=>{
+    if(req.body.theatreId || req.body.movieId){
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            { message: "Cannot update theatreId or movieId of the show" },
+            "Invalid show update request"
+        );
+    }
+    next();
+}
+
 module.exports={
     validateCreateShowRequest,
-    validateGetShowsRequest
+    validateGetShowsRequest,
+    validateUpdateShowRequest
 }
