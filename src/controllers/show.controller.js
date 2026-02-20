@@ -11,7 +11,16 @@ const create=async(req,res,next)=>{
         next(error);
     }
 }
+const getShows=async(req,res,next)=>{
+    try {
+        const response=await showService.getShows(req.query);
+        return successResponse(res, STATUS.OK, response, "Successfully fetched shows");
+    } catch (error) {
+        next(error);
+    }
+}
 
 module.exports={
-    create
+    create,
+    getShows
 }

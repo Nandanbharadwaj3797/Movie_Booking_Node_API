@@ -67,6 +67,26 @@ const validateCreateShowRequest=async (req,res,next)=>{
     next();
 }
 
+const validateGetShowsRequest=async (req,res,next)=>{
+    if(req.query.theatreId && !mongoose.Types.ObjectId.isValid(req.query.theatreId)){
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            { theatreId: "Invalid theatreId format" },
+            "Invalid show request"
+        );
+    }
+    if(req.query.movieId && !mongoose.Types.ObjectId.isValid(req.query.movieId)){
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            { movieId: "Invalid movieId format" },
+            "Invalid show request"
+        );
+    }
+    next();
+}
 module.exports={
-    validateCreateShowRequest
+    validateCreateShowRequest,
+    validateGetShowsRequest
 }
