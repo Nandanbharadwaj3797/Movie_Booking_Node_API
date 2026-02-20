@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const errorHandler = require('./middlewares/errorHandler.middlewares');
 const bookingRoutes = require('./routes/booking.routes');
+const showRoutes = require('./routes/show.routes');
 
 dotenv.config();
 
@@ -18,7 +19,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json());
 
-app.use(errorHandler);
+
 
 app.use((req, res, next) => {
   console.log('Incoming request:', req.method, req.url);
@@ -34,7 +35,9 @@ theatreRoutes(app);
 authRoutes(app);
 userRoutes(app);
 bookingRoutes(app);
+showRoutes(app);
 
+app.use(errorHandler);
 
 app.listen(process.env.PORT, async () => {
   console.log(`Server started on Port ${process.env.PORT} !!`);

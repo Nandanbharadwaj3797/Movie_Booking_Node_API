@@ -65,7 +65,7 @@ const deleteTheatre = async (id) => {
  */
 const getTheatreByID = async (id) => {
     try {
-        const response = await Theatre.findById(id);
+        const response = await Theatre.findById(id).lean();
         if(!response) {
             // no record found for the given id
             throw {
@@ -103,8 +103,12 @@ const getAllTheatres = async (queryParams) => {
         let query = {};
 
         if (city) query.city = city;
-        if (name) query.name = name;
-        if (movieId) query.movies = { $all: movieId };
+        if (name) query.name = { $regex: name, $options: 'i' };
+        if (movieId) {
+            const movieArray = Array.isArray(movieId) ? movieId : [movieId];
+            query.movies = { $in: movieArray };
+        }
+
 
         const skip = (pageNumber - 1) * limitNumber;
 
@@ -118,13 +122,13 @@ const getAllTheatres = async (queryParams) => {
                 .sort(sortOptions)
                 .skip(skip)
                 .limit(limitNumber)
+                .lean()
         ]);
-        const totalPages = Math.ceil(totalItems / limitNumber);
         return {
             theatres,
             pagination: {
                 totalItems,
-                totalPages,
+                totalPages: Math.ceil(totalItems / limitNumber),
                 currentPage: pageNumber,
                 pageSize: limitNumber
             }
@@ -201,7 +205,7 @@ const updateMoviesInTheatres = async (theatreId, movieIds, insert) => {
         const theatre = await Theatre.findByIdAndUpdate(
             theatreId,
             updateOperation,
-            { new: true }
+            { new: true, runValidators: true }
         );
 
         if (!theatre) {
@@ -222,7 +226,7 @@ const updateMoviesInTheatres = async (theatreId, movieIds, insert) => {
 
 const getMoviesInATheatre = async (id) => {
     try {
-        const theatre = await Theatre.findById(id, {name: 1, movies: 1, address: 1}).populate('movies');
+        const theatre = await Theatre.findById(id, {name: 1, movies: 1, address: 1}).populate('movies').lean();
         if(!theatre) {
             throw {
                 code: STATUS.NOT_FOUND,
@@ -237,20 +241,26 @@ const getMoviesInATheatre = async (id) => {
 }
 
 const checkMovieInATheatre = async (theatreId, movieId) => {
-    try {
-        let response = await Theatre.findById(theatreId);
-        if(!response) {
-            throw {
-                code: STATUS.NOT_FOUND,
-                message: "No theatre found for the given id"
-            };
-        }
-        return response.movies.some(movie => movie.toString() === movieId);
+    const theatre = await Theatre.findById(theatreId);
 
-    } catch (error) {
-        throw error;
+    if (!theatre) {
+        throw {
+            code: STATUS.NOT_FOUND,
+            message: "No theatre found for the given id"
+        };
     }
-}
+
+    if (!theatre.movies.some(movie => movie.equals(movieId))) {
+        throw {
+            code: STATUS.BAD_REQUEST,
+            message: "Movie not found in the theatre"
+        };
+    }
+
+    return true;
+};
+
+
 
 module.exports = {
     createTheatre,
