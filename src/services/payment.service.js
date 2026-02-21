@@ -11,7 +11,7 @@ const createPayment= async (data)=>{
     try {
         session.startTransaction();
 
-        const expiryTime = new Date(Date.now() - 30 * 60 * 1000);
+        const expiryTime = new Date(Date.now() - 10 * 60 * 1000);
         
         const booking=await Booking.findOneAndUpdate(
             {_id:data.bookingId,
@@ -78,6 +78,31 @@ const createPayment= async (data)=>{
         session.endSession();
     }
 }
+
+const getPaymentById=async(id)=>{
+    try{
+        const payment = await Payment.findById(id)
+        .populate({
+            path: 'bookingId',
+            select: '-__v'
+        });
+
+        if(!payment){
+            throw {
+                code: STATUS.NOT_FOUND,
+                message: "Payment record not found for the id provided"
+            };
+        }
+        return payment;
+    }
+    catch (error) {
+        throw error;
+    }
+    
+}
+
+
 module.exports={
-    createPayment
+    createPayment,
+    getPaymentById
 }

@@ -1,5 +1,5 @@
 const paymentService = require('../services/payment.service');
-const { STATUS, BOOKING_STATUS } = require('../utils/constants');
+const { STATUS } = require('../utils/constants');
 const { successResponse } = require('../utils/response');
 
 
@@ -18,6 +18,21 @@ const create = async (req, res, next) => {
     }
 };
 
+const getPaymentDetails = async (req, res, next) => {
+    try {
+        const response = await paymentService.getPaymentById(req.params.id);
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "Successfully fetched the payment details"
+        );
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
-    create
+    create,
+    getPaymentDetails
 }

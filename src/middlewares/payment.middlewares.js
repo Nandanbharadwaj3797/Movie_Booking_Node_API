@@ -1,4 +1,4 @@
-const { PAYMENT_STATUS } = require("../utils/constants");
+const { STATUS } = require("../utils/constants");
 const { ErrorResponse } = require("../utils/response");
 const mongoose = require("mongoose");
 const verifyPaymentCreateRequest=async(req,res,next)=>{
@@ -46,4 +46,32 @@ const verifyPaymentCreateRequest=async(req,res,next)=>{
     next();
 }
 
-module.exports={verifyPaymentCreateRequest};
+const verifyPaymentIdParam = async (req, res, next) => {
+
+    const paymentId = req.params.id;
+
+    if (!paymentId) {
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            { paymentId: "paymentId is required" },
+            "Invalid payment request"
+        );
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            { paymentId: "Invalid paymentId format" },
+            "Invalid payment request"
+        );
+    }
+
+    next();
+};
+
+module.exports={
+    verifyPaymentCreateRequest,
+    verifyPaymentIdParam
+};
