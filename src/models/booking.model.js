@@ -37,7 +37,8 @@ const bookingSchema = new mongoose.Schema({
             values: [
                 BOOKING_STATUS.PROCESSING,
                 BOOKING_STATUS.SUCCESSFUL,
-                BOOKING_STATUS.CANCELLED
+                BOOKING_STATUS.CANCELLED,
+                BOOKING_STATUS.PENDING
             ],
             message: "{VALUE} is not a valid booking status"
         },

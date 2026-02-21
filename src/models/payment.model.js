@@ -23,7 +23,9 @@ const paymentSchema = new mongoose.Schema({
             values: [
                 PAYMENT_STATUS.SUCCESSFUL,
                 PAYMENT_STATUS.FAILED,
-                PAYMENT_STATUS.PENDING
+                PAYMENT_STATUS.PENDING,
+                PAYMENT_STATUS.REFUNDED,
+                PAYMENT_STATUS.PROCESSING
             ],
             message: "{VALUE} is not a valid payment status"
         },

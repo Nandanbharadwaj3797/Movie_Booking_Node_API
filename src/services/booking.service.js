@@ -29,7 +29,7 @@ const createBooking = async (bookingDetails, userId) => {
         const response = await Booking.create({
             ...bookingDetails,
             userId,
-            status: BOOKING_STATUS.PROCESSING
+            status: BOOKING_STATUS.PENDING
         });
         return response;
     }catch (error) {
@@ -56,7 +56,7 @@ const updateBooking=async(data,bookingId)=>{
             new:true,
             runValidators:true
         });
-        if(!response){
+        if(response.length===0){
             throw {
                 code: STATUS.NOT_FOUND,
                 message: "No booking record found for the id provided"

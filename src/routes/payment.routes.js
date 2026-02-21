@@ -3,7 +3,7 @@ const authMiddleware = require('../middlewares/auth.middlewares');
 const paymentMiddleware = require('../middlewares/payment.middlewares');
 
 const routes=(app)=>{
-    app.post('/api/v1/payments',
+    app.post('/mba/api/v1/payments',
         authMiddleware.isAuthenticated,
         paymentMiddleware.verifyPaymentCreateRequest,
         paymentController.create

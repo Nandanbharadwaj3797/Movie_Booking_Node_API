@@ -11,8 +11,8 @@ const createPayment= async (data)=>{
     try {
         session.startTransaction();
 
-        const expiryTime = new Date(Date.now() - 5 * 60 * 1000);
-
+        const expiryTime = new Date(Date.now() - 30 * 60 * 1000);
+        
         const booking=await Booking.findOneAndUpdate(
             {_id:data.bookingId,
                 status: BOOKING_STATUS.PENDING,
@@ -21,7 +21,7 @@ const createPayment= async (data)=>{
                 $set: { status: BOOKING_STATUS.PROCESSING }
             },{new:true,session}
         );
-
+        
         if(!booking){
             const existingPayment = await Payment.findOne({
                 bookingId: data.bookingId,
@@ -45,16 +45,21 @@ const createPayment= async (data)=>{
             };
         }
 
-        const payment=await Payment.create({bookingId: booking._id,
-            amount:data.amount,
-        status:PAYMENT_STATUS.SUCCESSFUL}, { session });
+        const payment = await Payment.create(
+            [{
+                bookingId: booking._id,
+                amount: data.amount,
+                status: PAYMENT_STATUS.SUCCESSFUL
+            }],
+            { session }
+        );
 
         const result=await Booking.updateOne(
             { _id: booking._id,
                 status: BOOKING_STATUS.PROCESSING
             },
             { $set: 
-                { status:           BOOKING_STATUS.SUCCESSFUL }
+                { status:BOOKING_STATUS.SUCCESSFUL }
             },{ session }
         );
         if(result.modifiedCount!==1){
