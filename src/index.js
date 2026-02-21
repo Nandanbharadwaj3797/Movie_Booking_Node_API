@@ -10,6 +10,7 @@ const userRoutes = require('./routes/user.routes');
 const errorHandler = require('./middlewares/errorHandler.middlewares');
 const bookingRoutes = require('./routes/booking.routes');
 const showRoutes = require('./routes/show.routes');
+const paymentRoutes = require('./routes/payment.routes');
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ authRoutes(app);
 userRoutes(app);
 bookingRoutes(app);
 showRoutes(app);
+paymentRoutes(app);
 
 app.use(errorHandler);
 
