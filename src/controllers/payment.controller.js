@@ -32,7 +32,32 @@ const getPaymentDetails = async (req, res, next) => {
     }
 };
 
+const getAllPayments = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const page = req.query.page || 1;
+        const limit = req.query.limit || 10;
+
+        const response = await paymentService.getAllPayments(
+            userId,
+            page,
+            limit
+        );
+
+        return successResponse(
+            res,
+            STATUS.OK,
+            response,
+            "Successfully fetched payment details"
+        );
+
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     create,
-    getPaymentDetails
+    getPaymentDetails,
+    getAllPayments
 }

@@ -86,9 +86,15 @@ const validateSigninRequest = (req, res, next) => {
 
 const isAuthenticated = async (req, res, next) => {
     try {
-        const token =
-            req.headers["x-access-token"] ||
-            req.headers["authorization"]?.split(" ")[1];
+
+        const authHeader = req.headers["authorization"];
+        let token;
+
+        if (req.headers["x-access-token"]) {
+            token = req.headers["x-access-token"];
+        } else if (authHeader && authHeader.startsWith("Bearer ")) {
+            token = authHeader.split(" ")[1];
+        }
 
         if (!token) {
             return res.status(STATUS.UNAUTHORIZED).json({
@@ -97,9 +103,9 @@ const isAuthenticated = async (req, res, next) => {
             });
         }
 
-
         const decoded = jwt.verify(token, process.env.AUTH_KEY);
 
+        // Optional: skip DB hit if JWT contains all needed info
         const user = await userService.getUserById(decoded.id);
 
         if (!user) {
@@ -114,20 +120,23 @@ const isAuthenticated = async (req, res, next) => {
         next();
 
     } catch (error) {
-        if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+
+        if (
+            error.name === "JsonWebTokenError" ||
+            error.name === "TokenExpiredError"
+        ) {
             return res.status(STATUS.UNAUTHORIZED).json({
                 ...errorResponseBody,
-                err: error.message
+                err: "Invalid or expired token"
             });
         }
 
         return res.status(STATUS.INTERNAL_SERVER_ERROR).json({
             ...errorResponseBody,
-            err: error.message
+            err: "Authentication failed"
         });
     }
 };
-
 
 
 const validateResetPasswordRequest = (req, res, next) => {

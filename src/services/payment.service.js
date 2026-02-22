@@ -1,8 +1,8 @@
 const Payment= require('../models/payment.model');
 const Booking= require('../models/booking.model');  
-const { STATUS, PAYMENT_STATUS, BOOKING_STATUS } = require('../utils/constants');
+const { STATUS, PAYMENT_STATUS, BOOKING_STATUS, USER_ROLE } = require('../utils/constants');
 const mongoose = require('mongoose');
-
+const User = require('../models/user.model');
 
 const createPayment= async (data)=>{
 
@@ -101,8 +101,105 @@ const getPaymentById=async(id)=>{
     
 }
 
+const getAllPayments=async(userId,page=1,limit=10)=>{
+    try{
+
+        page = Math.max(parseInt(page) || 1, 1);
+        limit = Math.min(Math.max(parseInt(limit) || 10, 1), 50);
+        const skip = (page - 1) * limit;
+
+        const objectUserId = new mongoose.Types.ObjectId(userId);
+
+        const user=await User.findById(objectUserId).select("role").lean();
+
+        if(!user){
+            throw {
+                code: STATUS.NOT_FOUND,
+                message: "User not found"
+            };
+        }
+
+        if(user.role === USER_ROLE.ADMIN){
+            const [total, payments] = await Promise.all([
+                Payment.countDocuments(),
+                Payment.find()
+                    .populate({
+                        path: 'bookingId', select: '-__v' 
+                    })
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit)
+                    .lean()
+            ]);
+
+            return {
+                totalResults: total,
+                totalPages: Math.ceil(total / limit),
+                currentPage: page,
+                results: payments
+            };
+        }
+
+         const result = await Payment.aggregate([
+            {
+                $lookup: {
+                    from: "bookings",
+                    let: { bookingId: "$bookingId" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$_id", "$$bookingId"] },
+                                        { $eq: ["$userId", objectUserId] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    as: "booking"
+                }
+            },
+            { $unwind: "$booking" },
+            {
+                $project: {
+                    bookingId: 1,
+                    amount: 1,
+                    status: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    booking: 1
+                }
+            },
+
+            {
+                $facet: {
+                    metadata: [{ $count: "total" }],
+                    data: [
+                        { $sort: { createdAt: -1 } },
+                        { $skip: skip },
+                        { $limit: limit }
+                    ]
+                }
+            }
+        ]);
+
+        const total = result[0]?.metadata[0]?.total || 0;
+        const payments = result[0]?.data || [];
+
+        return {
+            totalResults: total,
+            totalPages: Math.ceil(total / limit),
+            currentPage: page,
+            results: payments
+        };
+    }catch (error) {
+        throw error;
+    }
+}
 
 module.exports={
     createPayment,
-    getPaymentById
+    getPaymentById,
+    getAllPayments
 }
