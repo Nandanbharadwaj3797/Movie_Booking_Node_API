@@ -4,82 +4,71 @@ const { STATUS, PAYMENT_STATUS, BOOKING_STATUS, USER_ROLE } = require('../utils/
 const mongoose = require('mongoose');
 const User = require('../models/user.model');
 
-const createPayment= async (data)=>{
+const createPayment = async (data, requestUser) => {
 
     const session = await mongoose.startSession();
 
     try {
-        session.startTransaction();
+        let createdPayment;
 
-        const expiryTime = new Date(Date.now() - 10 * 60 * 1000);
-        
-        const booking=await Booking.findOneAndUpdate(
-            {_id:data.bookingId,
+        await session.withTransaction(async () => {
+
+            const booking = await Booking.findOne({
+                _id: data.bookingId,
                 status: BOOKING_STATUS.PENDING,
-                createdAt: { $gte: expiryTime }
-            },{
-                $set: { status: BOOKING_STATUS.PROCESSING }
-            },{new:true,session}
-        );
-        
-        if(!booking){
+                expiresAt: { $gt: new Date() }
+            }).session(session);
+
+            if (!booking) {
+                throw {
+                    code: STATUS.BAD_REQUEST,
+                    message: "Booking expired or not eligible for payment"
+                };
+            }
+
+            const isAdmin = requestUser?.userRole === USER_ROLE.ADMIN;
+            const isBookingOwner = booking.userId?.toString() === requestUser?._id?.toString();
+
+            if (!isAdmin && !isBookingOwner) {
+                throw {
+                    code: STATUS.FORBIDDEN,
+                    message: "Not allowed to pay for this booking"
+                };
+            }
+
+            
             const existingPayment = await Payment.findOne({
-                bookingId: data.bookingId,
+                bookingId: booking._id,
                 status: PAYMENT_STATUS.SUCCESSFUL
             }).session(session);
 
             if (existingPayment) {
-                await session.commitTransaction();
-                return existingPayment;
+                createdPayment = existingPayment;
+                return;
             }
-            throw {
-                code: STATUS.BAD_REQUEST,
-                message: "Booking expired or not eligible for payment"
-            };
-        }
 
-        if (Number(data.amount) !== Number(booking.totalCost)) {
-            throw {
-                code: STATUS.BAD_REQUEST,
-                message: "Payment amount mismatch"
-            };
-        }
-
-        const payment = await Payment.create(
-            [{
+            const payment = await Payment.create([{
                 bookingId: booking._id,
-                amount: data.amount,
+                amount: booking.totalCost,
                 status: PAYMENT_STATUS.SUCCESSFUL
-            }],
-            { session }
-        );
+            }], { session });
 
-        const result=await Booking.updateOne(
-            { _id: booking._id,
-                status: BOOKING_STATUS.PROCESSING
-            },
-            { $set: 
-                { status:BOOKING_STATUS.SUCCESSFUL }
-            },{ session }
-        );
-        if(result.modifiedCount!==1){
-            throw {
-                code: STATUS.INTERNAL_SERVER_ERROR,
-                message: "Failed to update booking status"
-            };
-        }
-        await session.commitTransaction();
-        return payment[0]; 
+            createdPayment = payment[0];
 
-    }catch (error) {
-        await session.abortTransaction();
+            booking.status = BOOKING_STATUS.CONFIRMED;
+            await booking.save({ session });
+        });
+
+        return createdPayment;
+
+    } catch (error) {
         throw error;
-    }finally {
+    } finally {
         session.endSession();
     }
-}
+};
 
-const getPaymentById=async(id)=>{
+const getPaymentById=async(id, requestUser)=>{
     try{
         const payment = await Payment.findById(id)
         .populate({
@@ -93,6 +82,20 @@ const getPaymentById=async(id)=>{
                 message: "Payment record not found for the id provided"
             };
         }
+
+        const isAdmin = requestUser?.userRole === USER_ROLE.ADMIN;
+        const bookingId = payment.bookingId?._id || payment.bookingId;
+        const booking = await Booking.findById(bookingId).select('userId').lean();
+        const bookingOwnerId = booking?.userId?.toString();
+        const requestUserId = requestUser?._id?.toString();
+
+        if (!isAdmin && bookingOwnerId !== requestUserId) {
+            throw {
+                code: STATUS.FORBIDDEN,
+                message: "Not allowed to access this payment"
+            };
+        }
+
         return payment;
     }
     catch (error) {
@@ -108,9 +111,8 @@ const getAllPayments=async(userId,page=1,limit=10)=>{
         limit = Math.min(Math.max(parseInt(limit) || 10, 1), 50);
         const skip = (page - 1) * limit;
 
-        const objectUserId = new mongoose.Types.ObjectId(userId);
 
-        const user=await User.findById(objectUserId).select("role").lean();
+        const user=await User.findById(userId).select("userRole").lean();
 
         if(!user){
             throw {
@@ -119,7 +121,7 @@ const getAllPayments=async(userId,page=1,limit=10)=>{
             };
         }
 
-        if(user.role === USER_ROLE.ADMIN){
+        if(user.userRole === USER_ROLE.ADMIN){
             const [total, payments] = await Promise.all([
                 Payment.countDocuments(),
                 Payment.find()
@@ -140,7 +142,9 @@ const getAllPayments=async(userId,page=1,limit=10)=>{
             };
         }
 
-         const result = await Payment.aggregate([
+        const objectUserId = new mongoose.Types.ObjectId(userId);
+
+        const result = await Payment.aggregate([
             {
                 $lookup: {
                     from: "bookings",

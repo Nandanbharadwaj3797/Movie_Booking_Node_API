@@ -6,7 +6,7 @@ const { successResponse } = require('../utils/response');
 
 const create = async (req, res, next) => {
     try {
-        const response = await paymentService.createPayment(req.body);
+        const response = await paymentService.createPayment(req.body, req.user);
         return successResponse(
             res,
             STATUS.CREATED,
@@ -20,7 +20,7 @@ const create = async (req, res, next) => {
 
 const getPaymentDetails = async (req, res, next) => {
     try {
-        const response = await paymentService.getPaymentById(req.params.id);
+        const response = await paymentService.getPaymentById(req.params.id, req.user);
         return successResponse(
             res,
             STATUS.OK,

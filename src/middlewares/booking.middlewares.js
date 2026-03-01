@@ -1,63 +1,30 @@
-const { STATUS, USER_ROLE,BOOKING_STATUS } = require("../utils/constants");
+const { STATUS, USER_ROLE, BOOKING_STATUS } = require("../utils/constants");
 const { ErrorResponse } = require("../utils/response");
 const mongoose = require("mongoose");
-const userService = require("../services/user.service");
+
 
 const validateBookingCreateRequest = (req, res, next) => {
-    const { theatreId, movieId, timings, noOfSeats } = req.body;
 
-    // Required fields
-    if (!theatreId) {
-        return ErrorResponse(
-            res,
-            STATUS.BAD_REQUEST,
-            { theatreId: "theatreId is required" },
-            "Invalid booking request"
-        );
+    const { showId, noOfSeats } = req.body;
+    const errors = {};
+
+    if (!showId) {
+        errors.showId = "showId is required";
+    } else if (!mongoose.Types.ObjectId.isValid(showId)) {
+        errors.showId = "Invalid showId format";
     }
 
-    if (!movieId) {
-        return ErrorResponse(
-            res,
-            STATUS.BAD_REQUEST,
-            { movieId: "movieId is required" },
-            "Invalid booking request"
-        );
+    if (noOfSeats === undefined) {
+        errors.noOfSeats = "noOfSeats is required";
+    } else if (!Number.isInteger(noOfSeats) || noOfSeats <= 0) {
+        errors.noOfSeats = "noOfSeats must be a positive integer";
     }
 
-    if (!timings) {
+    if (Object.keys(errors).length > 0) {
         return ErrorResponse(
             res,
             STATUS.BAD_REQUEST,
-            { timings: "timing is required" },
-            "Invalid booking request"
-        );
-    }
-
-    if (!noOfSeats || noOfSeats <= 0) {
-        return ErrorResponse(
-            res,
-            STATUS.BAD_REQUEST,
-            { noOfSeats: "noOfSeats must be greater than 0" },
-            "Invalid booking request"
-        );
-    }
-
-    // ObjectId validation
-    if (!mongoose.Types.ObjectId.isValid(theatreId)) {
-        return ErrorResponse(
-            res,
-            STATUS.BAD_REQUEST,
-            { theatreId: "Invalid theatreId format" },
-            "Invalid booking request"
-        );
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(movieId)) {
-        return ErrorResponse(
-            res,
-            STATUS.BAD_REQUEST,
-            { movieId: "Invalid movieId format" },
+            errors,
             "Invalid booking request"
         );
     }
@@ -65,14 +32,24 @@ const validateBookingCreateRequest = (req, res, next) => {
     next();
 };
 
-
 const canChangeStatus = async (req, res, next) => {
+
     try {
-        const user = await userService.getUserById(req.user);
+
+        const user = req.user;   
         const { status } = req.body;
 
-        const isCustomer = user.role === USER_ROLE.CUSTOMER;
-        const isAdmin = user.role === USER_ROLE.ADMIN;
+        if (!status) {
+            return ErrorResponse(
+                res,
+                STATUS.BAD_REQUEST,
+                {},
+                "Status is required"
+            );
+        }
+
+        const isCustomer = user.userRole === USER_ROLE.CUSTOMER;
+        const isAdmin = user.userRole === USER_ROLE.ADMIN;
 
         if (!isCustomer && !isAdmin) {
             return ErrorResponse(
@@ -83,7 +60,18 @@ const canChangeStatus = async (req, res, next) => {
             );
         }
 
-        if (isCustomer && status &&status !== BOOKING_STATUS.CANCELLED) {
+        // Validate status enum
+        if (!Object.values(BOOKING_STATUS).includes(status)) {
+            return ErrorResponse(
+                res,
+                STATUS.BAD_REQUEST,
+                {},
+                "Invalid booking status value"
+            );
+        }
+
+        // Customers can only cancel
+        if (isCustomer && status !== BOOKING_STATUS.CANCELLED) {
             return ErrorResponse(
                 res,
                 STATUS.FORBIDDEN,

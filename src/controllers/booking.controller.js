@@ -3,7 +3,7 @@ const { successResponse } = require('../utils/response');
 const bookingService=require('../services/booking.service');
 const create=async(req,res,next)=>{
     try {
-        let userId=req.user;
+        const userId=req.user._id;
 
         const response=await bookingService.createBooking(req.body,userId);
         return successResponse(
@@ -21,7 +21,7 @@ const create=async(req,res,next)=>{
 
 const update=async(req,res,next)=>{
     try {
-        const response=await bookingService.updateBooking(req.body,req.params.id);
+        const response=await bookingService.updateBooking(req.params.id, req.body, req.user._id);
         return successResponse(
             res,
             STATUS.OK,

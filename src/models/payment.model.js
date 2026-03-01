@@ -5,17 +5,14 @@ const paymentSchema = new mongoose.Schema({
     bookingId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Booking',
-        required: true
+        required: true,
+        index: true
     },
     amount: {
         type: Number,
         required: true,
         min: 0
     },
-    // currency: {
-    //     type: String,
-    //     default: "INR"
-    // },
     status: {
         type: String,
         required: true,
@@ -31,18 +28,24 @@ const paymentSchema = new mongoose.Schema({
         },
         default: PAYMENT_STATUS.PENDING
     },
-    // paymentMethod: {
-    //     type: String,
-    //     required: true
-    // },
-    // transactionId: {
-    //     type: String,
-    //     unique: true,
-    //     sparse: true
-    // }
+    transactionId: {
+        type: String,
+        index: true
+    },
+    idempotencyKey: {
+        type: String,
+        unique: true,
+        sparse: true
+    }
 }, { timestamps: true });
 
-paymentSchema.index({ bookingId: 1 });
+paymentSchema.index(
+    { bookingId: 1, status: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { status: PAYMENT_STATUS.SUCCESSFUL }
+    }
+);
 
 const Payment = mongoose.model('Payment', paymentSchema);
 
