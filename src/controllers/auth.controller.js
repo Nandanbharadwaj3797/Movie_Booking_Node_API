@@ -1,103 +1,152 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const { STATUS } = require("../utils/constants");
+const userService = require("../services/user.service");
+const { successResponse } = require("../utils/response");
 
-const userService = require('../services/user.service');
-const { successResponseBody, errorResponseBody } = require('../utils/responsebody');
-
+/**
+ * Remove sensitive fields
+ */
 const sanitizeUser = (user) => {
     if (!user) return user;
     const plainUser = user.toObject ? user.toObject() : { ...user };
     delete plainUser.password;
+    delete plainUser.__v;
     return plainUser;
 };
 
-const signup = async (req, res) => {
-    try {
-        const response = await userService.createUser(req.body);
-        return res.status(201).json({
-            ...successResponseBody,
-            data: sanitizeUser(response),
-            message: "Successfully registered a user"
-        });
-    } catch (error) {
-        if(error.err) {
-            return res.status(error.code).json({
-                ...errorResponseBody,
-                err: error.err
-            });
-        }
-        return res.status(500).json({
-            ...errorResponseBody,
-            err: error
-        });
-    }
-}
 
-const signin = async (req, res) => {
+/**
+ * SIGNUP
+ */
+const signup = async (req, res, next) => {
+    try {
+        const user = await userService.createUser(req.body);
+
+        return successResponse(
+            res,
+            STATUS.CREATED,
+            sanitizeUser(user),
+            "User created successfully"
+        );
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+/**
+ * SIGNIN
+ */
+const signin = async (req, res, next) => {
     try {
         const user = await userService.getUserByEmail(req.body.email);
-        const isValidPassword = await user.isValidPassword(req.body.password);
-        if(!isValidPassword) {
-            throw {err: 'Invalid password for the given email', code: 401};
+
+        // Prevent crash & user enumeration
+        if (!user) {
+            return next({
+                err: "Invalid email or password",
+                code: STATUS.UNAUTHORIZED
+            });
         }
+
+        const isValidPassword = await user.isValidPassword(req.body.password);
+
+        if (!isValidPassword) {
+            return next({
+                err: "Invalid email or password",
+                code: STATUS.UNAUTHORIZED
+            });
+        }
+
         const token = jwt.sign(
-            {id: user.id, email: user.email}, 
+            {
+                id: user._id,
+                role: user.userRole,
+                status: user.userStatus
+            },
             process.env.AUTH_KEY,
-            {expiresIn: '1h'}
+            { expiresIn: "1h" }
         );
 
-        successResponseBody.message = "Successfully logged in";
-        successResponseBody.data = {
-            email: user.email,
-            role: user.userRole,
-            status: user.userStatus,
-            token: token
-        };
+        return successResponse(
+            res,
+            STATUS.OK,
+            {
+                email: user.email,
+                role: user.userRole,
+                status: user.userStatus,
+                token
+            },
+            "Successfully logged in"
+        );
 
-        return res.status(200).json(successResponseBody);
     } catch (error) {
-        if(error.err) {
-            return res.status(error.code).json({
-                ...errorResponseBody,
-                err: error.err
-            });
-        }
-        console.log(error);
-        return res.status(500).json({
-            ...errorResponseBody,
-            err: error
-        });
+        next(error);
     }
-}
+};
 
-const resetPassword = async (req, res) => {
+
+/**
+ * RESET PASSWORD
+ */
+const resetPassword = async (req, res, next) => {
     try {
         const user = await userService.getUserById(req.user.id);
-        const isOldPasswordCorrect = await user.isValidPassword(req.body.oldPassword);
-        if(!isOldPasswordCorrect) {
-            throw {err: 'Invalid old password, please write the correct old password', code: 403};
-        }
-        user.password = req.body.newPassword;
-        await user.save();
-        return res.status(200).json({
-            ...successResponseBody,
-            data: sanitizeUser(user),
-            message: 'Successfully updated the password for the given user'
-        });
-    } catch (error) {
-        if(error.err) {
-            return res.status(error.code).json({
-                ...errorResponseBody,
-                err: error.err
+
+        if (!user) {
+            return next({
+                err: "User not found",
+                code: STATUS.NOT_FOUND
             });
         }
-        return res.status(500).json({
-            ...errorResponseBody,
-            err: error
-        });
+
+        const isOldPasswordCorrect = await user.isValidPassword(
+            req.body.oldPassword
+        );
+
+        if (!isOldPasswordCorrect) {
+            return next({
+                err: "Invalid old password",
+                code: STATUS.BAD_REQUEST
+            });
+        }
+
+        user.password = req.body.newPassword;
+        await user.save(); // pre-save hook hashes password
+
+        return successResponse(
+            res,
+            STATUS.OK,
+            {},
+            "Password reset successfully"
+        );
+
+    } catch (error) {
+        next(error);
     }
-}
+};
+
+
+/**
+ * LOGOUT
+ */
+const logout = async (req, res, next) => {
+    try {
+        return successResponse(
+            res,
+            STATUS.OK,
+            {},
+            "Successfully logged out"
+        );
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 module.exports = {
     signup,
     signin,
-    resetPassword
-}
+    resetPassword,
+    logout
+};

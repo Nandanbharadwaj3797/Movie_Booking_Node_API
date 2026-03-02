@@ -1,47 +1,65 @@
-const mongoose = require('mongoose'); 
+const mongoose = require("mongoose");
+const { RELEASED_STATUS } = require("../utils/constants");
 
-/**
- * Define the schema of the movie resource to be stored in the db
- */
 const movieSchema = new mongoose.Schema({
+
     name: {
         type: String,
         required: true,
-        minlength: 2
+        minlength: 2,
+        trim: true
     },
+
     description: {
         type: String,
         required: true,
-        minlength: 5
+        minlength: 5,
+        trim: true
     },
+
     casts: {
         type: [String],
         required: true
     },
+
     trailerUrl: {
         type: String,
-        required: true
+        required: true,
+        match: [/^https?:\/\/.+/, "Invalid URL"]
     },
+
     language: {
         type: String,
-        required: true,
         default: "English"
     },
+
     releaseDate: {
-        type: String,
+        type: Date,
         required: true
     },
+
+    duration: {
+        type: Number,
+        required: true,
+        min: 1
+    },
+
     director: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
+
     releaseStatus: {
         type: String,
-        required: true,
-        default: "RELEASED",
-    },
-}, {timestamps: true});
+        enum: Object.values(RELEASED_STATUS),
+        default: RELEASED_STATUS.RELEASED
+    }
 
-const Movie = mongoose.model('Movie', movieSchema); // creates a new model
+}, { timestamps: true });
 
-module.exports = Movie; // returning the model to be used in other files of the project
+movieSchema.index({ name: 1 });
+movieSchema.index({ releaseDate: -1 });
+movieSchema.index({ releaseStatus: 1, releaseDate: -1 });
+
+module.exports = mongoose.model("Movie", movieSchema);

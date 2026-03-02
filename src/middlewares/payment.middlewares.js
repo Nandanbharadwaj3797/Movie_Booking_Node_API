@@ -1,50 +1,46 @@
 const { STATUS } = require("../utils/constants");
 const { ErrorResponse } = require("../utils/response");
 const mongoose = require("mongoose");
-const verifyPaymentCreateRequest=async(req,res,next)=>{
-     const { bookingId, amount } = req.body;
 
+const verifyPaymentCreateRequest = (req, res, next) => {
+  try {
+    const { bookingId, idempotencyKey } = req.body;
+
+    const errors = {};
+
+    //  bookingId required
     if (!bookingId) {
-        return ErrorResponse(
-            res,
-            STATUS.BAD_REQUEST,
-            { bookingId: "bookingId is required" },
-            "Invalid payment request"
-        );
+      errors.bookingId = "bookingId is required";
+    } 
+    // bookingId must be valid ObjectId
+    else if (!mongoose.Types.ObjectId.isValid(bookingId.toString().trim())) {
+      errors.bookingId = "Invalid bookingId format";
     }
 
-    
-    if (!mongoose.Types.ObjectId.isValid(bookingId)) {
-        return ErrorResponse(
-            res,
-            STATUS.BAD_REQUEST,
-            { bookingId: "Invalid bookingId format" },
-            "Invalid payment request"
-        );
+    //  Optional idempotencyKey validation
+    if (idempotencyKey && typeof idempotencyKey !== "string") {
+      errors.idempotencyKey = "idempotencyKey must be a string";
     }
 
-    if (amount === undefined || amount === null) {
-        return ErrorResponse(
-            res,
-            STATUS.BAD_REQUEST,
-            { amount: "amount is required" },
-            "Invalid payment request"
-        );
+    // If any validation errors
+    if (Object.keys(errors).length > 0) {
+      return next({
+        code: STATUS.BAD_REQUEST,
+        message: "Invalid payment request",
+        errors
+      });
     }
 
-    if (isNaN(amount) || Number(amount) <= 0) {
-        return ErrorResponse(
-            res,
-            STATUS.BAD_REQUEST,
-            { amount: "amount must be a positive number" },
-            "Invalid payment request"
-        );
-    }
-
-
+    // Normalize bookingId
+    req.body.bookingId = bookingId.toString().trim();
 
     next();
-}
+
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 const verifyPaymentIdParam = async (req, res, next) => {
 

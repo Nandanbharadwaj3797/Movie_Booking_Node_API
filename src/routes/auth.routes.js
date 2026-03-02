@@ -1,8 +1,8 @@
 const authController = require('../controllers/auth.controller');
-
 const authMiddleware = require('../middlewares/auth.middlewares');
 
 const routes = (app) => {
+
     app.post(
         '/mba/api/v1/auth/signup',
         authMiddleware.validateSignupRequest,
@@ -16,12 +16,17 @@ const routes = (app) => {
     );
 
     app.patch(
-        '/mba/api/v1/auth/reset',
+        '/mba/api/v1/users/me/password',
         authMiddleware.isAuthenticated,
         authMiddleware.validateResetPasswordRequest,
         authController.resetPassword
     );
-    
-}
+
+    app.post(
+        '/mba/api/v1/auth/logout',
+        authMiddleware.isAuthenticated,
+        authController.logout
+    );
+};
 
 module.exports = routes;

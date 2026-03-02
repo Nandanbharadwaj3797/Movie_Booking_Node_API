@@ -12,31 +12,53 @@ const { USER_ROLE,STATUS } = require('../utils/constants');
  */
 const validateSignupRequest = (req, res, next) => {
 
-    if (!req.body || typeof req.body !== 'object') {
+    if (!req.body || typeof req.body !== "object") {
         return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            err: "Request body is missing"
+            success: false,
+            message: "Request body is missing"
         });
     }
 
-    if (!req.body.name) {
+    //  Prevent Extra / Malicious Fields (Mass Assignment Protection)
+    const allowedFields = ["name", "email", "password"];
+    const receivedFields = Object.keys(req.body);
+
+    const isValidOperation = receivedFields.every(field =>
+        allowedFields.includes(field)
+    );
+
+    if (!isValidOperation) {
         return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            err: "Name of the user not present in the request"
+            success: false,
+            message: "Invalid fields in request"
         });
     }
 
-    if (!req.body.email) {
-        return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            err: "Email of the user not present in the request"
-        });
+    const { name, email, password } = req.body;
+    const errors = [];
+
+    //  Name validation
+    if (!name || name.trim().length === 0) {
+        errors.push("Name is required");
     }
 
-    if (!req.body.password) {
+    //  Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        errors.push("Valid email is required");
+    }
+
+    //  Password validation
+    if (!password) {
+        errors.push("Password is required");
+    } else if (password.length < 6) {
+        errors.push("Password must be at least 6 characters long");
+    }
+
+    if (errors.length > 0) {
         return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            err: "Password of the user not present in the request"
+            success: false,
+            errors
         });
     }
 
@@ -52,24 +74,48 @@ const validateSignupRequest = (req, res, next) => {
  */
 const validateSigninRequest = (req, res, next) => {
 
-    if (!req.body || typeof req.body !== 'object') {
+    if (!req.body || typeof req.body !== "object") {
         return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            err: "Request body is missing"
+            success: false,
+            message: "Request body is missing"
         });
     }
 
-    if (!req.body.email) {
+    //  Prevent extra fields
+    const allowedFields = ["email", "password"];
+    const receivedFields = Object.keys(req.body);
+
+    const isValidOperation = receivedFields.every(field =>
+        allowedFields.includes(field)
+    );
+
+    if (!isValidOperation) {
         return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            err: "No email provided for sign in"
+            success: false,
+            message: "Invalid fields in request"
         });
     }
 
-    if (!req.body.password) {
+    const { email, password } = req.body;
+    const errors = [];
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || email.trim().length === 0) {
+        errors.push("Email is required");
+    } else if (!emailRegex.test(email)) {
+        errors.push("Invalid email format");
+    }
+
+    // Password validation
+    if (!password || password.length === 0) {
+        errors.push("Password is required");
+    }
+
+    if (errors.length > 0) {
         return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            err: "No password provided for sign in"
+            success: false,
+            errors
         });
     }
 
@@ -109,13 +155,17 @@ const isAuthenticated = async (req, res, next) => {
         const user = await userService.getUserById(decoded.id);
 
         if (!user) {
-            return res.status(STATUS.NOT_FOUND).json({
+            return res.status(STATUS.UNAUTHORIZED).json({
                 ...errorResponseBody,
-                err: "User not found"
+                err: "Invalid authentication token"
             });
         }
 
-        req.user = user;
+        req.user = {
+            id: user._id,
+            userRole: user.userRole,
+            userStatus: user.userStatus
+        };
 
         next();
 
@@ -141,65 +191,85 @@ const isAuthenticated = async (req, res, next) => {
 
 const validateResetPasswordRequest = (req, res, next) => {
 
-    if (!req.body || typeof req.body !== 'object') {
+    if (!req.body || typeof req.body !== "object") {
         return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            err: "Request body is missing"
+            success: false,
+            message: "Request body is missing"
         });
     }
 
-    if (!req.body.oldPassword) {
+    // Prevent extra fields (Mass assignment protection)
+    const allowedFields = ["oldPassword", "newPassword"];
+    const receivedFields = Object.keys(req.body);
+
+    const isValidOperation = receivedFields.every(field =>
+        allowedFields.includes(field)
+    );
+
+    if (!isValidOperation) {
         return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            err: 'Missing the old password in the request'
+            success: false,
+            message: "Invalid fields in request"
         });
     }
 
-    if (!req.body.newPassword) {
+    const { oldPassword, newPassword } = req.body;
+    const errors = [];
+
+    // Old password validation
+    if (!oldPassword || oldPassword.trim().length === 0) {
+        errors.push("Old password is required");
+    }
+
+    // New password validation
+    if (!newPassword || newPassword.trim().length === 0) {
+        errors.push("New password is required");
+    } else if (newPassword.length < 6) {
+        errors.push("New password must be at least 6 characters long");
+    }
+
+    // Prevent same password reuse
+    if (oldPassword && newPassword && oldPassword === newPassword) {
+        errors.push("New password cannot be same as old password");
+    }
+
+    if (errors.length > 0) {
         return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            err: 'Missing the new password in the request'
+            success: false,
+            errors
         });
     }
 
     next();
 };
 
-const forbid = (res, message) => {
+const forbid = (res, message = "Access denied") => {
     return res.status(STATUS.FORBIDDEN).json({
         ...errorResponseBody,
         err: message
     });
 };
 
-const isAdmin = (req, res, next) => {
-    console.log(req.user);
-    if (!req.user || req.user.userRole !== USER_ROLE.ADMIN) {
-        return forbid(res, "User is not an admin, cannot proceed with the request");
-    }
-    next();
+const authorizeRoles = (...allowedRoles) => {
+    return (req, res, next) => {
+
+        if (!req.user) {
+            return res.status(STATUS.UNAUTHORIZED).json({
+                success: false,
+                message: "Authentication required"
+            });
+        }
+
+        if (!allowedRoles.includes(req.user.userRole)) {
+            return forbid(res, "Access denied");
+        }
+
+        next();
+    };
 };
 
-const isClient = (req, res, next) => {
-    if (!req.user || req.user.userRole !== USER_ROLE.CLIENT) {
-        return forbid(res, "User is not a client, cannot proceed with the request");
-    }
-    next();
-};
-
-const isAdminOrClient = (req, res, next) => {
-    if (
-        !req.user ||
-        (req.user.userRole !== USER_ROLE.ADMIN &&
-         req.user.userRole !== USER_ROLE.CLIENT)
-    ) {
-        return forbid(
-            res,
-            "User is neither a client nor an admin, cannot proceed with the request"
-        );
-    }
-    next();
-};
+const isAdmin = authorizeRoles(USER_ROLE.ADMIN);
+const isAdminOrClient = authorizeRoles(USER_ROLE.ADMIN, USER_ROLE.CLIENT);
 
 
 
@@ -209,6 +279,6 @@ module.exports = {
     isAuthenticated,
     validateResetPasswordRequest,
     isAdmin,
-    isClient,
-    isAdminOrClient
+    isAdminOrClient,
+    authorizeRoles
 }

@@ -1,42 +1,26 @@
 const showService=require('../services/show.service');
 const { STATUS } = require('../utils/constants');
-const { successResponse } = require('../utils/response');   
+const { asyncHandler, sendSuccess } = require('../utils/handlers');
 
+const create=asyncHandler(async(req,res)=>{
+    const response=await showService.createShow(req.body);
+    sendSuccess(res, STATUS.CREATED, response, "Successfully created the show");
+});
 
-const create=async(req,res,next)=>{
-    try {
-        const response=await showService.createShow(req.body);
-        return successResponse(res, STATUS.CREATED, response, "Successfully created the show");
-    } catch (error) {
-        next(error);
-    }
-}
-const getShows=async(req,res,next)=>{
-    try {
-        const response=await showService.getShows(req.query);
-        return successResponse(res, STATUS.OK, response, "Successfully fetched shows");
-    } catch (error) {
-        next(error);
-    }
-}
+const getShows=asyncHandler(async(req,res)=>{
+    const response=await showService.getShows(req.query);
+    sendSuccess(res, STATUS.OK, response, "Successfully fetched shows");
+});
 
-const destroy=async(req,res,next)=>{
-    try {
-        const response=await showService.deleteShow(req.params.id);
-        return successResponse(res, STATUS.OK, response, "Successfully deleted the show");
-    } catch (error) {
-        next(error);
-    }
-}
+const destroy=asyncHandler(async(req,res)=>{
+    const response=await showService.deleteShow(req.params.id);
+    sendSuccess(res, STATUS.OK, response, "Successfully deleted the show");
+});
 
-const update=async(req,res,next)=>{
-    try {
-        const response=await showService.updateShow(req.params.id,req.body);
-        return successResponse(res, STATUS.OK, response, "Successfully updated the show");
-    } catch (error) {
-        next(error);
-    }
-}
+const update=asyncHandler(async(req,res)=>{
+    const response=await showService.updateShow(req.params.id,req.body);
+    sendSuccess(res, STATUS.OK, response, "Successfully updated the show");
+});
 
 module.exports={
     create,

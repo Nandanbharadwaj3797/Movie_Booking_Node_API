@@ -27,36 +27,43 @@ const createPayment = async (data, requestUser) => {
             }
 
             const isAdmin = requestUser?.userRole === USER_ROLE.ADMIN;
-            const isBookingOwner = booking.userId?.toString() === requestUser?._id?.toString();
+            const isOwner = booking.userId?.toString() === requestUser?._id?.toString();
 
-            if (!isAdmin && !isBookingOwner) {
+            if (!isAdmin && !isOwner) {
                 throw {
                     code: STATUS.FORBIDDEN,
                     message: "Not allowed to pay for this booking"
                 };
             }
 
-            
-            const existingPayment = await Payment.findOne({
-                bookingId: booking._id,
-                status: PAYMENT_STATUS.SUCCESSFUL
-            }).session(session);
+            if (data.idempotencyKey) {
+                const existingByKey = await Payment.findOne({
+                idempotencyKey: data.idempotencyKey,
+                }).session(session);
 
-            if (existingPayment) {
-                createdPayment = existingPayment;
+                if (existingByKey) {
+                createdPayment = existingByKey;
                 return;
+                }
             }
 
-            const payment = await Payment.create([{
-                bookingId: booking._id,
-                amount: booking.totalCost,
-                status: PAYMENT_STATUS.SUCCESSFUL
-            }], { session });
-
-            createdPayment = payment[0];
-
-            booking.status = BOOKING_STATUS.CONFIRMED;
+            const [payment] = await Payment.create(
+                [
+                {
+                    bookingId: booking._id,
+                    userId: booking.userId,
+                    amount: booking.totalCost,
+                    status: PAYMENT_STATUS.SUCCESSFUL,
+                    idempotencyKey: data.idempotencyKey,
+                },
+                ],
+                { session }
+            );
+             booking.status = BOOKING_STATUS.CONFIRMED;
+            booking.paymentId = payment._id;
             await booking.save({ session });
+
+            createdPayment = payment;
         });
 
         return createdPayment;

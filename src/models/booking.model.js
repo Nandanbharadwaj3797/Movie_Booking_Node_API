@@ -27,13 +27,7 @@ const bookingSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: {
-            values: [
-                BOOKING_STATUS.PENDING,
-                BOOKING_STATUS.CONFIRMED,
-                BOOKING_STATUS.FAILED,
-                BOOKING_STATUS.CANCELLED,
-                BOOKING_STATUS.EXPIRED
-            ],
+            values: Object.values(BOOKING_STATUS),
             message: "{VALUE} is not a valid booking status"
         },
         default: BOOKING_STATUS.PENDING,

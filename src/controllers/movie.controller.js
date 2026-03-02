@@ -1,55 +1,46 @@
 const movieService = require('../services/movie.service');
 const { STATUS } = require('../utils/constants');
-const { successResponse } = require('../utils/response');
+const { asyncHandler, sendSuccess } = require('../utils/handlers');
 
 /**
- * Controller function to create a new movie
- * @returns movie created
+ * Create a new movie
  */
-const createMovie = async (req, res, next) => {
-    try {
-        const response = await movieService.createMovie(req.body);
-        return successResponse(res, STATUS.CREATED, response, "Successfully created the movie");
-    } catch (error) {
-        next(error);
-    }
-};
+const createMovie = asyncHandler(async (req, res) => {
+    const response = await movieService.createMovie(req.body);
+    sendSuccess(res, STATUS.CREATED, response, "Successfully created the movie");
+});
 
-const deleteMovie = async (req, res, next) => {
-    try {
-        const response = await movieService.deleteMovie(req.params.id);
-        return successResponse(res, STATUS.OK, response, "Successfully deleted the given movie");
-    } catch (error) {
-        next(error);
-    }
-};
+/**
+ * Delete a movie
+ */
+const deleteMovie = asyncHandler(async (req, res) => {
+    const response = await movieService.deleteMovie(req.params.id);
+    sendSuccess(res, STATUS.OK, response, "Successfully deleted the given movie");
+});
 
-const getMovie = async (req, res, next) => {
-    try {
-        const response = await movieService.getMovieById(req.params.id);
-        return successResponse(res, STATUS.OK, response, "Successfully fetched the given movie");
-    } catch (error) {
-        next(error);
-    }
-};
+/**
+ * Get a single movie
+ */
+const getMovie = asyncHandler(async (req, res) => {
+    const response = await movieService.getMovieById(req.params.id);
+    sendSuccess(res, STATUS.OK, response, "Successfully fetched the given movie");
+});
 
-const updateMovie = async (req, res, next) => {
-    try {
-        const response = await movieService.updateMovie(req.params.id, req.body);
-        return successResponse(res, STATUS.OK, response, "Successfully updated the movie");
-    } catch (error) {
-        next(error);
-    }
-};
+/**
+ * Update a movie
+ */
+const updateMovie = asyncHandler(async (req, res) => {
+    const response = await movieService.updateMovie(req.params.id, req.body);
+    sendSuccess(res, STATUS.OK, response, "Successfully updated the movie");
+});
 
-const getMovies = async (req, res, next) => {
-    try {
-        const response = await movieService.fetchMovies(req.query);
-        return successResponse(res, STATUS.OK, response, "Successfully fetched movies");
-    } catch (error) {
-        next(error);
-    }
-};
+/**
+ * Get all movies
+ */
+const getMovies = asyncHandler(async (req, res) => {
+    const response = await movieService.fetchMovies(req.query);
+    sendSuccess(res, STATUS.OK, response, "Successfully fetched movies");
+});
 
 
 module.exports = {

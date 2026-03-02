@@ -1,105 +1,47 @@
 const theatreService = require('../services/theatre.service');
 const { STATUS } = require('../utils/constants');
-const { successResponse } = require('../utils/response');
+const { asyncHandler, sendSuccess } = require('../utils/handlers');
 
 /**
  * Create Theatre
  */
-const create = async (req, res, next) => {
-    try {
-        const response = await theatreService.createTheatre(req.body);
-
-        return successResponse(
-            res,
-            STATUS.CREATED,
-            response, "Successfully created the theatre"
-        );
-
-    } catch (error) {
-        next(error);
-    }
-};
+const create = asyncHandler(async (req, res) => {
+    const response = await theatreService.createTheatre(req.body);
+    sendSuccess(res, STATUS.CREATED, response, "Successfully created the theatre");
+});
 
 /**
  * Delete Theatre
  */
-const destroy = async (req, res, next) => {
-    try {
-        const response = await theatreService.deleteTheatre(req.params.id);
-
-        return successResponse(
-            res,
-            STATUS.OK,
-            response,
-            "Successfully deleted the given theatre"
-        );
-
-
-    } catch (error) {
-        next(error);
-    }
-};
+const destroy = asyncHandler(async (req, res) => {
+    const response = await theatreService.deleteTheatre(req.params.id);
+    sendSuccess(res, STATUS.OK, response, "Successfully deleted the given theatre");
+});
 
 /**
  * Get Single Theatre
  */
-const getTheatre = async (req, res, next) => {
-    try {
-        const response = await theatreService.getTheatreByID(req.params.id);
-
-        return successResponse(
-            res,
-            STATUS.OK,
-            response,
-            "Successfully fetched theatre"
-        );
-
-
-    } catch (error) {
-
-        next(error);
-    }
-};
+const getTheatre = asyncHandler(async (req, res) => {
+    const response = await theatreService.getTheatreByID(req.params.id);
+    sendSuccess(res, STATUS.OK, response, "Successfully fetched theatre");
+});
         
 /**
  * Get All Theatres
  */
-const getTheatres = async (req, res, next) => {
-    try {
-        const response = await theatreService.getAllTheatres(req.query);
-
-        return successResponse(
-            res,
-            STATUS.OK,
-            response,
-            "Successfully fetched all theatres"
-        );
-
-
-    } catch (error) {
-        next(error);
-    }
-};
+const getTheatres = asyncHandler(async (req, res) => {
+    const response = await theatreService.getAllTheatres(req.query);
+    sendSuccess(res, STATUS.OK, response, "Successfully fetched all theatres");
+});
 
 /**
  * Update Theatre
  */
-const update = async (req, res, next) => {
-    try {
-        const response = await theatreService.updateTheatre(req.params.id, req.body);
+const update = asyncHandler(async (req, res) => {
+    const response = await theatreService.updateTheatre(req.params.id, req.body);
+    sendSuccess(res, STATUS.OK, response, "Successfully updated the theatre");
+});
 
-        return successResponse(
-            res,
-            STATUS.OK,
-            response,
-            "Successfully updated the theatre"
-        );
-
-
-    } catch (error) {
-        next(error);
-    }
-};
 
 /**
  * Update Movies in Theatre

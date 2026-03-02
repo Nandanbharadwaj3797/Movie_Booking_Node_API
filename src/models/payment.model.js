@@ -8,6 +8,12 @@ const paymentSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        index: true
+    },
     amount: {
         type: Number,
         required: true,
@@ -15,18 +21,12 @@ const paymentSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        required: true,
         enum: {
-            values: [
-                PAYMENT_STATUS.SUCCESSFUL,
-                PAYMENT_STATUS.FAILED,
-                PAYMENT_STATUS.PENDING,
-                PAYMENT_STATUS.REFUNDED,
-                PAYMENT_STATUS.PROCESSING
-            ],
+            values:Object.values(PAYMENT_STATUS),
             message: "{VALUE} is not a valid payment status"
         },
-        default: PAYMENT_STATUS.PENDING
+        default: PAYMENT_STATUS.PENDING,
+        required: true
     },
     transactionId: {
         type: String,

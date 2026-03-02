@@ -1,29 +1,49 @@
 const mongoose = require('mongoose');
-/**
- * Defines the schema of theatre resource to be stored in the db
- */
 
 const theatreSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        minlength: 5
+        minlength: 5,
+        trim: true
     },
-    description: String,
+    description: {
+        type: String,
+        trim: true
+    },
     city: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     pincode: {
         type: Number,
         required: true
     },
-    address: String,
+    address: {
+        type: String,
+        trim: true
+    },
     movies: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'Movie'
+    },
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+    licenseNumber: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    status: {
+        type: String,
+        enum: ["PENDING", "APPROVED", "REJECTED"],
+        default: "PENDING"
     }
-}, {timestamps: true});
+}, { timestamps: true });
 
 const Theatre = mongoose.model('Theatre', theatreSchema);
 
