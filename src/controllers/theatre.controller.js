@@ -1,13 +1,28 @@
 const theatreService = require('../services/theatre.service');
 const { STATUS } = require('../utils/constants');
 const { asyncHandler, sendSuccess } = require('../utils/handlers');
+const sendMail = require('../services/email.service');
 
 /**
  * Create Theatre
  */
 const create = asyncHandler(async (req, res) => {
+    req.body.owner = req.user._id; // Set the owner of the theatre to the authenticated user
     const response = await theatreService.createTheatre(req.body);
+
+    // Send response first
     sendSuccess(res, STATUS.CREATED, response, "Successfully created the theatre");
+
+    // Send email in background
+    try {
+        await sendMail(
+            req.user.email,
+            "Theatre Creation Confirmation",
+            `Your theatre named ${response.name} has been successfully created with ID: ${response._id}`
+        );
+    } catch (err) {
+        console.error("Email sending failed:", err.message);
+    }
 });
 
 /**
@@ -109,6 +124,40 @@ const checkMovie = async (req, res, next) => {
     }
 };
 
+/**
+ * Approve/Reject Theatre (Admin only)
+ */
+const approve = asyncHandler(async (req, res) => {
+    const { status } = req.body;
+    const theatreId = req.params.id;
+
+    if (!status) {
+        return sendSuccess(res, STATUS.BAD_REQUEST, null, "Status is required");
+    }
+
+    const response = await theatreService.approveTheatre(theatreId, status);
+
+    // Send email notification to theatre owner
+    try {
+        const theatre = await theatreService.getTheatreByID(theatreId);
+        const owner = await require('../models/user.model').findById(theatre.owner);
+        
+        const emailSubject = status === 'APPROVED' 
+            ? 'Theatre Approval Confirmation' 
+            : 'Theatre Rejection Notice';
+        
+        const emailContent = status === 'APPROVED'
+            ? `Congratulations! Your theatre "${theatre.name}" has been approved and is now live on our platform.`
+            : `Unfortunately, your theatre "${theatre.name}" has been rejected. Please contact support for more details.`;
+
+        await sendMail(owner.email, emailSubject, emailContent);
+    } catch (err) {
+        console.error("Email notification failed:", err.message);
+    }
+
+    sendSuccess(res, STATUS.OK, response, `Theatre ${status.toLowerCase()} successfully`);
+});
+
 module.exports = {
     create,
     destroy,
@@ -117,5 +166,6 @@ module.exports = {
     update,
     updateMovies,
     getMovies,
-    checkMovie
+    checkMovie,
+    approve
 };

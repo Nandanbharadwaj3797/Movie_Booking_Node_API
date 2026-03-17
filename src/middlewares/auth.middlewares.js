@@ -161,11 +161,7 @@ const isAuthenticated = async (req, res, next) => {
             });
         }
 
-        req.user = {
-            id: user._id,
-            userRole: user.userRole,
-            userStatus: user.userStatus
-        };
+        req.user = user;
 
         next();
 

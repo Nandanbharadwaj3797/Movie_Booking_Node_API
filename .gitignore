@@ -1,2 +1,5 @@
 .env
 node_modules/
+
+# Example/Demo files - for local testing only
+*.example.js
