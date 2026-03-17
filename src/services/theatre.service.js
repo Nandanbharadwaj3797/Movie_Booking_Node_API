@@ -8,32 +8,34 @@ const {STATUS} = require('../utils/constants');
  */
 const createTheatre = async (data) => {
     try {
-        const response = await Theatre.create(data);
-        return response;
+        return await Theatre.create(data);
 
     } catch (error) {
 
+        // Validation Error
         if (error.name === 'ValidationError') {
-
             const validationErrors = {};
-
             Object.keys(error.errors).forEach((key) => {
                 validationErrors[key] = error.errors[key].message;
             });
 
-            throw {
-                code: STATUS.UNPROCESSABLE_ENTITY,
-                message: validationErrors
-            };
-
+            const err = new Error("Validation Failed");
+            err.code = STATUS.UNPROCESSABLE_ENTITY;
+            err.details = validationErrors;
+            throw err;
         }
 
-        // For all other errors
-        throw {
-            code: STATUS.INTERNAL_SERVER_ERROR,
-            message: error.message
-        };
+        // Duplicate key
+        if (error.code === 11000) {
+            const err = new Error("Duplicate field value entered");
+            err.code = STATUS.CONFLICT;
+            throw err;
+        }
 
+        // Other errors
+        const err = new Error(error.message);
+        err.code = STATUS.INTERNAL_SERVER_ERROR;
+        throw err;
     }
 };
 
@@ -260,6 +262,40 @@ const checkMovieInATheatre = async (theatreId, movieId) => {
     return true;
 };
 
+/**
+ * 
+ * @param theatreId -> id of the theatre to be approved/rejected
+ * @param status -> APPROVED or REJECTED
+ * @returns -> the updated theatre object
+ */
+const approveTheatre = async (theatreId, status) => {
+    try {
+        if (!['APPROVED', 'REJECTED'].includes(status)) {
+            throw {
+                code: STATUS.BAD_REQUEST,
+                message: "Status must be APPROVED or REJECTED"
+            };
+        }
+
+        const theatre = await Theatre.findByIdAndUpdate(
+            theatreId,
+            { status },
+            { new: true, runValidators: true }
+        );
+
+        if (!theatre) {
+            throw {
+                code: STATUS.NOT_FOUND,
+                message: "No theatre found for the given id"
+            };
+        }
+
+        return theatre;
+    } catch (error) {
+        throw error;
+    }
+};
+
 
 
 module.exports = {
@@ -270,5 +306,6 @@ module.exports = {
     updateTheatre,
     updateMoviesInTheatres,
     getMoviesInATheatre,
-    checkMovieInATheatre
+    checkMovieInATheatre,
+    approveTheatre
 }

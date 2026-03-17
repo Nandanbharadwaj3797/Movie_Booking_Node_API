@@ -2,9 +2,12 @@ const paymentService = require('../services/payment.service');
 const { STATUS } = require('../utils/constants');
 const { asyncHandler, sendSuccess } = require('../utils/handlers');
 
+const sendMail=require('../services/email.service');
+
 const create = asyncHandler(async (req, res) => {
     const response = await paymentService.createPayment(req.body, req.user);
     sendSuccess(res, STATUS.CREATED, response, "Successfully created the payment");
+    sendMail.sendEmail(req.user.email, "Payment Confirmation", `Your payment of amount ${response.amount} has been successfully processed. Payment ID: ${response.id}`);
 });
 
 const getPaymentDetails = asyncHandler(async (req, res) => {

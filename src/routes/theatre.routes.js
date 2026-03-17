@@ -9,7 +9,6 @@ const routes = (app) => {
     // create a theatre
     app.post('/mba/api/v1/theatres',
         authMiddleware.isAuthenticated,
-        authMiddleware.isAdminOrClient,
         theatreMiddleware.validateTheatreCreateRequest,
         theatreController.create
     );
@@ -31,6 +30,13 @@ const routes = (app) => {
     app.get(
         '/mba/api/v1/theatres',
         theatreController.getTheatres
+    );
+
+    // approve/reject theatre (Admin only)
+    app.patch('/mba/api/v1/theatres/:id/approve',
+        authMiddleware.isAuthenticated,
+        authMiddleware.isAdmin,
+        theatreController.approve
     );
 
     // update a theatre partially
