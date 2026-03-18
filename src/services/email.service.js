@@ -1,15 +1,21 @@
 const axios = require('axios');
 
-const sendMail = async (email, subject, content) => {
-    console.log("NOTI_SERVICE:", process.env.NOTI_SERVICE);
+const sendMail = async (recipientEmail, subject, content) => {
+    if (!recipientEmail) {
+        throw new Error('recipientEmail is required to send email');
+    }
 
     try {
         await axios.post(
             process.env.NOTI_SERVICE + '/notiservice/api/v1/notifications',
             {
-                subject,
-                recipientEmail: [email],
-                content
+                subject: subject,
+                recipientEmail: [recipientEmail],
+                content: content,
+            },{
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             }
         );
     } catch (error) {
