@@ -1,4 +1,4 @@
-const { errorResponseBody } = require('../utils/responsebody');
+const { ErrorResponse }= require('../utils/response');
 const { STATUS } = require('../utils/constants');
 
 /**
@@ -11,33 +11,41 @@ const { STATUS } = require('../utils/constants');
 const validateTheatreCreateRequest = (req, res, next) => {
 
     if (!req.body || typeof req.body !== 'object') {
-        return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            message: "Request body is missing"
-        });
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            null,
+            "Request body is missing"
+        );
     }
 
     const { name, pincode, city } = req.body;
 
     if (!name || typeof name !== 'string') {
-        return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            message: "The name of the theatre is not present or invalid"
-        });
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            null,
+            "The name of the theatre is not present or invalid"
+        );
     }
 
     if (!pincode) {
-        return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            message: "The pincode of the theatre is not present in the request"
-        });
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            null,
+            "The pincode of the theatre is not present"
+        );
     }
 
     if (!city || typeof city !== 'string') {
-        return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            message: "The city of the theatre is not present or invalid"
-        });
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            null,
+            "The city of the theatre is not present or invalid"
+        );
     }
 
     next();
@@ -46,33 +54,41 @@ const validateTheatreCreateRequest = (req, res, next) => {
 const validateUpdateMoviesRequest = (req, res, next) => {
 
     if (!req.body || typeof req.body !== 'object') {
-        return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            message: "Request body is missing"
-        });
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            null,
+            "Request body is missing"
+        );
     }
 
     const { insert, movieIds } = req.body;
 
     if (typeof insert !== 'boolean') {
-        return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            message: "The insert parameter must be a boolean"
-        });
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            null,
+            "Insert field is missing or not of boolean type"
+        );
     }
 
     if (!Array.isArray(movieIds)) {
-        return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            message: "Expected array of movie IDs"
-        });
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            null,
+            "movieIds field is missing or not of array type"
+        );
     }
 
     if (movieIds.length === 0) {
-        return res.status(STATUS.BAD_REQUEST).json({
-            ...errorResponseBody,
-            message: "No movies present in the array provided"
-        });
+        return ErrorResponse(
+            res,
+            STATUS.BAD_REQUEST,
+            null,
+            "movieIds array cannot be empty"
+        );
     }
 
     next();

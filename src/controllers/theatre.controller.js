@@ -7,22 +7,21 @@ const sendMail = require('../services/email.service');
  * Create Theatre
  */
 const create = asyncHandler(async (req, res) => {
-    req.body.owner = req.user._id; // Set the owner of the theatre to the authenticated user
-    const response = await theatreService.createTheatre(req.body);
+    const response = await theatreService.createTheatre({
+        ...req.body,
+        owner: req.user._id
+    });
 
-    // Send response first
     sendSuccess(res, STATUS.CREATED, response, "Successfully created the theatre");
 
-    // Send email in background
-    try {
-        await sendMail(
-            req.user.email,
-            "Theatre Creation Confirmation",
-            `Your theatre named ${response.name} has been successfully created with ID: ${response._id}`
-        );
-    } catch (err) {
+    // Fire & forget email (non-blocking)
+    sendMail(
+        req.user.email,
+        "Theatre Creation Confirmation",
+        `Your theatre named ${response.name} has been successfully created with ID: ${response._id}`
+    ).catch(err => {
         console.error("Email sending failed:", err.message);
-    }
+    });
 });
 
 /**

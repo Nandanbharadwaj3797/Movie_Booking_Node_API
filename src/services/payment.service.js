@@ -1,8 +1,11 @@
 const Payment= require('../models/payment.model');
+
 const Booking= require('../models/booking.model');  
-const { STATUS, PAYMENT_STATUS, BOOKING_STATUS, USER_ROLE } = require('../utils/constants');
+
 const mongoose = require('mongoose');
 const User = require('../models/user.model');
+
+const { STATUS, PAYMENT_STATUS, BOOKING_STATUS, USER_ROLE } = require('../utils/constants');
 
 const createPayment = async (data, requestUser) => {
 
