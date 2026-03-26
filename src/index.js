@@ -15,6 +15,9 @@ const paymentRoutes = require('./routes/payment.routes');
 dotenv.config();
 
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
+const mongoUri = isProduction ? process.env.PROD_DB_URL : process.env.DB_URL;
+const port = process.env.PORT || 3000;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -29,7 +32,9 @@ app.use((req, res, next) => {
   next();
 });
 
-mongoose.set('debug', true);
+mongoose.set('debug', !isProduction);
+
+
 
 MovieRoutes(app);
 theatreRoutes(app);
@@ -41,14 +46,23 @@ paymentRoutes(app);
 
 app.use(errorHandler);
 
-app.listen(process.env.PORT, async () => {
-  console.log(`Server started on Port ${process.env.PORT} !!`);
-
+const startServer = async () => {
   try {
-    await mongoose.connect(process.env.DB_URL);
-    console.log("Successfully connected to MongoDB");
+    if (!mongoUri) {
+      throw new Error('MongoDB URI is missing. Set DB_URL for development or PROD_DB_URL for production.');
+    }
+
+    await mongoose.connect(mongoUri);
+    console.log("MongoDB connected");
+
+    app.listen(port, () => {
+      console.log(`Server started on Port ${port}`);
+    });
+
   } catch (err) {
-    console.error("Not able to connect MongoDB", err);
+    console.error("MongoDB connection failed", err);
     process.exit(1);
   }
-});
+};
+
+startServer();
